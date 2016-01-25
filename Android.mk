@@ -19,7 +19,8 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libnvram-messages
 LOCAL_SRC_FILES := \
-	blob.cpp
+	blob.cpp \
+	io.cpp
 LOCAL_STATIC_LIBRARIES := libbase
 LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
