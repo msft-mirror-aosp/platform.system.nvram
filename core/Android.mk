@@ -19,6 +19,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libnvram-core
 LOCAL_SRC_FILES := \
+	nvram_manager.cpp \
 	persistence.cpp
 LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_CFLAGS := -Wall -Werror -Wextra
