@@ -17,18 +17,11 @@
 #ifndef NVRAM_COMPILER_H_
 #define NVRAM_COMPILER_H_
 
-extern "C" {
-#include <stdlib.h>
-}
-
 #if defined(__GNUC__) || defined(__clang__)
 #define NVRAM_WARN_UNUSED_RESULT __attribute__((warn_unused_result))
 #else
 #define NVRAM_WARN_UNUSED_RESULT
 #endif
-
-// Check a condition, abort if it doesn't hold.
-#define NVRAM_CHECK(cond) if (!(cond)) abort()
 
 // The visibility attribute works both with clang and GCC.
 #define NVRAM_EXPORT __attribute__((visibility("default")))
