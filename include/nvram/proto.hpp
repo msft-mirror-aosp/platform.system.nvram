@@ -87,7 +87,6 @@ extern "C" {
 #include <nvram/compiler.h>
 #include <nvram/io.h>
 #include <nvram/message_codec.h>
-#include <nvram/optional.h>
 #include <nvram/struct.h>
 #include <nvram/tagged_union.h>
 #include <nvram/type_traits.h>
@@ -218,21 +217,6 @@ struct Codec<Vector<ElementType>> {
   static bool Decode(Vector<ElementType>& vector, ProtoReader* reader) {
     return vector.Resize(vector.size() + 1) &&
            DecodeField<ElementCodec>(vector[vector.size() - 1], reader);
-  }
-};
-
-// |Codec| specialization for |Optional|.
-template <typename ValueType>
-struct Codec<Optional<ValueType>> {
-  using ValueCodec = Codec<ValueType>;
-  static constexpr WireType kWireType = ValueCodec::kWireType;
-
-  static bool Encode(const Optional<ValueType>& value, ProtoWriter* writer) {
-    return !value.valid() || EncodeField<ValueCodec>(value.value(), writer);
-  }
-
-  static bool Decode(Optional<ValueType>& value, ProtoReader* reader) {
-    return DecodeField<ValueCodec>(value.Activate(), reader);
   }
 };
 
