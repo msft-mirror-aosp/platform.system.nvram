@@ -21,8 +21,7 @@ LOCAL_MODULE := libnvram
 LOCAL_SRC_FILES := \
 	blob.cpp \
 	io.cpp \
-	message_codec.cpp \
-	nvram_messages.cpp
+	message_codec.cpp
 LOCAL_STATIC_LIBRARIES := libbase
 LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
