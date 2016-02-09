@@ -30,9 +30,6 @@ extern "C" {
 // Check a condition, abort if it doesn't hold.
 #define NVRAM_CHECK(cond) if (!(cond)) abort()
 
-// The noinline attribute is understood both by clang and GCC.
-#define NVRAM_NOINLINE __attribute__((noinline))
-
 // The visibility attribute works both with clang and GCC.
 #define NVRAM_EXPORT __attribute__((visibility("default")))
 

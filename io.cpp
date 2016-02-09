@@ -71,6 +71,8 @@ bool DecodeVarint(InputStreamBuffer* stream_buffer, uint64_t* value) {
 
 }  // namespace
 
+InputStreamBuffer::InputStreamBuffer() = default;
+
 InputStreamBuffer::InputStreamBuffer(const void* data, size_t size)
     : InputStreamBuffer(data, static_cast<const uint8_t*>(data) + size) {}
 
@@ -79,6 +81,8 @@ InputStreamBuffer::InputStreamBuffer(const void* start, const void* end)
       end_(static_cast<const uint8_t*>(end)) {
   NVRAM_CHECK(pos_ <= end_);
 }
+
+InputStreamBuffer::~InputStreamBuffer() = default;
 
 bool InputStreamBuffer::Done() {
   return pos_ >= end_ && !Advance();
@@ -139,6 +143,8 @@ NestedInputStreamBuffer::NestedInputStreamBuffer(InputStreamBuffer* delegate,
       delegate_(delegate),
       remaining_(size) {}
 
+NestedInputStreamBuffer::~NestedInputStreamBuffer() = default;
+
 bool NestedInputStreamBuffer::Advance() {
   remaining_ -= end_ - delegate_->pos_;
   if (remaining_ == 0) {
@@ -151,6 +157,8 @@ bool NestedInputStreamBuffer::Advance() {
   return status;
 }
 
+OutputStreamBuffer::OutputStreamBuffer() = default;
+
 OutputStreamBuffer::OutputStreamBuffer(void* data, size_t size)
     : OutputStreamBuffer(data, static_cast<uint8_t*>(data) + size) {}
 
@@ -158,6 +166,8 @@ OutputStreamBuffer::OutputStreamBuffer(void* start, void* end)
     : pos_(static_cast<uint8_t*>(start)), end_(static_cast<uint8_t*>(end)) {
   NVRAM_CHECK(pos_ <= end_);
 }
+
+OutputStreamBuffer::~OutputStreamBuffer() = default;
 
 bool OutputStreamBuffer::Done() {
   return pos_ >= end_ && !Advance();
@@ -200,6 +210,8 @@ bool OutputStreamBuffer::Advance() {
 CountingOutputStreamBuffer::CountingOutputStreamBuffer()
     : OutputStreamBuffer(scratch_space_, kScratchSpaceSize) {}
 
+CountingOutputStreamBuffer::~CountingOutputStreamBuffer() = default;
+
 bool CountingOutputStreamBuffer::Advance() {
   bytes_written_ += pos_ - scratch_space_;
   pos_ = scratch_space_;
@@ -211,6 +223,8 @@ uint8_t CountingOutputStreamBuffer::scratch_space_[kScratchSpaceSize];
 
 BlobOutputStreamBuffer::BlobOutputStreamBuffer(Blob* blob)
     : OutputStreamBuffer(blob->data(), blob->size()), blob_(blob) {}
+
+BlobOutputStreamBuffer::~BlobOutputStreamBuffer() = default;
 
 bool BlobOutputStreamBuffer::Advance() {
   ptrdiff_t offset = pos_ - blob_->data();
