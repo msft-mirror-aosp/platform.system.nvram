@@ -88,7 +88,6 @@ extern "C" {
 #include <nvram/io.h>
 #include <nvram/message_codec.h>
 #include <nvram/struct.h>
-#include <nvram/tagged_union.h>
 #include <nvram/type_traits.h>
 #include <nvram/vector.h>
 
@@ -130,7 +129,7 @@ namespace {
 // noinline to prevent the compiler from inlining |Codec::Encode| for every
 // occurrence of a field of type |Type|.
 template <typename Codec, typename Type>
-NVRAM_NOINLINE bool EncodeField(const Type& value, ProtoWriter* writer) {
+bool EncodeField(const Type& value, ProtoWriter* writer) NVRAM_NOINLINE {
   return Codec::Encode(value, writer);
 }
 
@@ -138,7 +137,7 @@ NVRAM_NOINLINE bool EncodeField(const Type& value, ProtoWriter* writer) {
 // noinline to prevent the compiler from inlining |Codec::Decode| for every
 // occurrence of a field of type |Type|.
 template <typename Codec, typename Type>
-NVRAM_NOINLINE bool DecodeField(Type& value, ProtoReader* reader) {
+bool DecodeField(Type& value, ProtoReader* reader) NVRAM_NOINLINE {
   return Codec::Decode(value, reader);
 }
 
@@ -273,47 +272,7 @@ struct StructDescriptor<StructType, index_sequence<indices...>> {
     static constexpr auto kFieldSpec = kFieldSpecList.template Get<index>();
     using FieldSpecType = typename remove_const<decltype(kFieldSpec)>::Type;
     using MemberType = typename FieldSpecType::MemberType;
-
-    // Determines the Codec type to use for the field. The default is to use
-    // |Codec<MemberType>|, which is appropriate for simple fields declared via
-    // |FieldSpec|.
-    template <typename FieldSpec>
-    struct MemberCodecLookup {
-      using Type = Codec<MemberType>;
-    };
-
-    // |TaggedUnion| members require a special codec implementation that takes
-    // into account the case, so encoding only takes place if the respective
-    // union member is active and decoding activates the requested member before
-    // decoding data.
-    template <typename Struct, typename TagType, typename... Member>
-    struct MemberCodecLookup<
-        OneOfFieldSpec<Struct, TagType, Member...>> {
-      static constexpr TagType kTag = kFieldSpec.kTag;
-
-      struct Type {
-        using TaggedUnionType = TaggedUnion<TagType, Member...>;
-        using TaggedUnionMemberType =
-            typename TaggedUnionType::template MemberLookup<kTag>::Type::Type;
-        using TaggedUnionMemberCodec = Codec<TaggedUnionMemberType>;
-        static constexpr WireType kWireType = TaggedUnionMemberCodec::kWireType;
-
-        static bool Encode(const TaggedUnionType& object, ProtoWriter* writer) {
-          const TaggedUnionMemberType* member = object.template get<kTag>();
-          if (member) {
-            return EncodeField<TaggedUnionMemberCodec>(*member, writer);
-          }
-          return true;
-        }
-
-        static bool Decode(TaggedUnionType& object, ProtoReader* reader) {
-          return DecodeField<TaggedUnionMemberCodec>(
-              object.template Activate<kTag>(), reader);
-        }
-      };
-    };
-
-    using MemberCodec = typename MemberCodecLookup<FieldSpecType>::Type;
+    using MemberCodec = Codec<FieldSpecType>;
 
     // Encodes a member. Retrieves a reference to the member within |object| and
     // calls the appropriate encoder.
