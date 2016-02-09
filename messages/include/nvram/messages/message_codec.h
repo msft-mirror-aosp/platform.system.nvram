@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_MESSAGE_CODEC_H_
-#define NVRAM_MESSAGE_CODEC_H_
+#ifndef NVRAM_MESSAGES_MESSAGE_CODEC_H_
+#define NVRAM_MESSAGES_MESSAGE_CODEC_H_
 
 extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 }
 
-#include <nvram/compiler.h>
-#include <nvram/io.h>
+#include <nvram/messages/compiler.h>
+#include <nvram/messages/io.h>
 
 namespace nvram {
 namespace proto {
@@ -141,4 +141,4 @@ class NVRAM_EXPORT MessageDecoderBase {
 }  // namespace proto
 }  // namespace nvram
 
-#endif  // NVRAM_MESSAGE_CODEC_H_
+#endif  // NVRAM_MESSAGES_MESSAGE_CODEC_H_

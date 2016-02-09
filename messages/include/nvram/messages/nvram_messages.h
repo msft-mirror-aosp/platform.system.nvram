@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_NVRAM_MESSAGES_H_
-#define NVRAM_NVRAM_MESSAGES_H_
+#ifndef NVRAM_MESSAGES_NVRAM_MESSAGES_H_
+#define NVRAM_MESSAGES_NVRAM_MESSAGES_H_
 
 #include <hardware/nvram_defs.h>
 
-#include <nvram/blob.h>
-#include <nvram/compiler.h>
-#include <nvram/struct.h>
-#include <nvram/tagged_union.h>
-#include <nvram/vector.h>
+#include <nvram/messages/blob.h>
+#include <nvram/messages/compiler.h>
+#include <nvram/messages/struct.h>
+#include <nvram/messages/tagged_union.h>
+#include <nvram/messages/vector.h>
 
 namespace nvram {
 
@@ -168,4 +168,4 @@ bool Decode(const uint8_t* data, size_t size, Message* msg);
 
 }  // namespace nvram
 
-#endif  // NVRAM_NVRAM_MESSAGES_H_
+#endif  // NVRAM_MESSAGES_NVRAM_MESSAGES_H_

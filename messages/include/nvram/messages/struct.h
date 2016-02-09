@@ -100,10 +100,10 @@
 //    implementation), and the library weighs in as a non-trivial dependency in
 //    terms of code size.
 
-#ifndef NVRAM_STRUCT_H_
-#define NVRAM_STRUCT_H_
+#ifndef NVRAM_MESSAGES_STRUCT_H_
+#define NVRAM_MESSAGES_STRUCT_H_
 
-#include <nvram/type_traits.h>
+#include <nvram/messages/type_traits.h>
 
 namespace nvram {
 
@@ -280,4 +280,4 @@ constexpr FieldSpecList<FieldSpec...> MakeFieldList(FieldSpec... field_spec) {
 
 }  // namespace nvram
 
-#endif  // NVRAM_STRUCT_H_
+#endif  // NVRAM_MESSAGES_STRUCT_H_

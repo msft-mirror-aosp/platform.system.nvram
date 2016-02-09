@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_VECTOR_H_
-#define NVRAM_VECTOR_H_
+#ifndef NVRAM_MESSAGES_VECTOR_H_
+#define NVRAM_MESSAGES_VECTOR_H_
 
 extern "C" {
 #include <stddef.h>
@@ -25,7 +25,7 @@ extern "C" {
 
 #include <new>
 
-#include <nvram/compiler.h>
+#include <nvram/messages/compiler.h>
 
 namespace nvram {
 
@@ -166,4 +166,4 @@ template <typename ElementType> class Vector {
 
 }  // namespace nvram
 
-#endif  // NVRAM_VECTOR_H_
+#endif  // NVRAM_MESSAGES_VECTOR_H_

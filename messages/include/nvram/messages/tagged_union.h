@@ -85,8 +85,8 @@
 //
 //   ASSERT_EQ(-1, VariantToInt(value));
 
-#ifndef NVRAM_TAGGED_UNION_H_
-#define NVRAM_TAGGED_UNION_H_
+#ifndef NVRAM_MESSAGES_TAGGED_UNION_H_
+#define NVRAM_MESSAGES_TAGGED_UNION_H_
 
 extern "C" {
 #include <stddef.h>
@@ -94,7 +94,7 @@ extern "C" {
 
 #include <new>
 
-#include <nvram/compiler.h>
+#include <nvram/messages/compiler.h>
 
 namespace nvram {
 
@@ -300,4 +300,4 @@ class TaggedUnion {
 
 }  // namespace nvram
 
-#endif  // NVRAM_TAGGED_UNION_H_
+#endif  // NVRAM_MESSAGES_TAGGED_UNION_H_

@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 
-#include <nvram/nvram_messages.h>
+#include <nvram/messages/nvram_messages.h>
 
 namespace nvram {
 

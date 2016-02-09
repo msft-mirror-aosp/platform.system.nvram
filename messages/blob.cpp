@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <nvram/blob.h>
+#include <nvram/messages/blob.h>
 
 extern "C" {
 #include <stdlib.h>

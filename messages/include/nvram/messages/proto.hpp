@@ -76,22 +76,22 @@
 // in decode and encode logic getting compiled in only one translation unit,
 // which other code can link against.
 
-#ifndef NVRAM_PROTO_HPP_
-#define NVRAM_PROTO_HPP_
+#ifndef NVRAM_MESSAGES_PROTO_HPP_
+#define NVRAM_MESSAGES_PROTO_HPP_
 
 extern "C" {
 #include <stdint.h>
 }
 
-#include <nvram/blob.h>
-#include <nvram/compiler.h>
-#include <nvram/io.h>
-#include <nvram/message_codec.h>
-#include <nvram/optional.h>
-#include <nvram/struct.h>
-#include <nvram/tagged_union.h>
-#include <nvram/type_traits.h>
-#include <nvram/vector.h>
+#include <nvram/messages/blob.h>
+#include <nvram/messages/compiler.h>
+#include <nvram/messages/io.h>
+#include <nvram/messages/message_codec.h>
+#include <nvram/messages/optional.h>
+#include <nvram/messages/struct.h>
+#include <nvram/messages/tagged_union.h>
+#include <nvram/messages/type_traits.h>
+#include <nvram/messages/vector.h>
 
 namespace nvram {
 namespace proto {
@@ -476,4 +476,4 @@ bool Decode(Struct* object, InputStreamBuffer* stream) {
 }  // namespace proto
 }  // namespace nvram
 
-#endif  // NVRAM_PROTO_HPP_
+#endif  // NVRAM_MESSAGES_PROTO_HPP_

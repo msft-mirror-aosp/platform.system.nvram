@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_BLOB_H_
-#define NVRAM_BLOB_H_
+#ifndef NVRAM_MESSAGES_BLOB_H_
+#define NVRAM_MESSAGES_BLOB_H_
 
 extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 }
 
-#include <nvram/compiler.h>
+#include <nvram/messages/compiler.h>
 
 namespace nvram {
 
@@ -67,4 +67,4 @@ class NVRAM_EXPORT Blob {
 
 }  // namespace nvram
 
-#endif  // NVRAM_BLOB_H_
+#endif  // NVRAM_MESSAGES_BLOB_H_

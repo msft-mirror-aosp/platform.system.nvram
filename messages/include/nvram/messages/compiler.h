@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_COMPILER_H_
-#define NVRAM_COMPILER_H_
+#ifndef NVRAM_MESSAGES_COMPILER_H_
+#define NVRAM_MESSAGES_COMPILER_H_
 
 extern "C" {
 #include <stdlib.h>
@@ -36,4 +36,4 @@ extern "C" {
 // The visibility attribute works both with clang and GCC.
 #define NVRAM_EXPORT __attribute__((visibility("default")))
 
-#endif  // NVRAM_COMPILER_H_
+#endif  // NVRAM_MESSAGES_COMPILER_H_
