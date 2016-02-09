@@ -151,41 +151,6 @@ constexpr FieldSpec<Struct, Member> MakeField(uint32_t field_number,
   return FieldSpec<Struct, Member>(field_number, member);
 };
 
-// Forward declaration for |TaggedUnion|, so we don't have to include the full
-// header.
-template <typename TagType, typename... Member>
-class TaggedUnion;
-
-// A special field specification type for protobuf fields belonging to a "oneof"
-// construct, of which one field may be active at a time. This is represented by
-// a |TaggedUnion| struct member. In addition to the field number and member
-// pointer, the field specification also records the |TaggedUnion| tag value
-// that selects the |TaggedUnion| member which corresponds to the field.
-template <typename Struct, typename TagType, typename... Member>
-struct OneOfFieldSpec
-    : public FieldSpec<Struct, TaggedUnion<TagType, Member...>> {
-  using TaggedUnionType = TaggedUnion<TagType, Member...>;
-
-  constexpr OneOfFieldSpec(uint32_t field_number,
-                           TaggedUnionType Struct::*member,
-                           TagType tag)
-      : FieldSpec<Struct, TaggedUnionType>(field_number, member), kTag(tag) {}
-
-  // The |TaggedUnion| tag corresponding to the |TaggedUnion| member that holds
-  // the field's data.
-  const TagType kTag;
-};
-
-// A helper function template that simplifies |OneOfFieldSpec| creation by
-// enabling template argument type deduction.
-template <typename Struct, typename TagType, typename... Member>
-constexpr OneOfFieldSpec<Struct, TagType, Member...> MakeOneOfField(
-    uint32_t field_number,
-    TaggedUnion<TagType, Member...> Struct::*member,
-    TagType tag) {
-  return OneOfFieldSpec<Struct, TagType, Member...>(field_number, member, tag);
-};
-
 // A simple type list intended to hold field specification values.
 //
 // Note that |FieldSpecList| is a literal type so can be used with constexpr to
