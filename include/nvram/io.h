@@ -28,16 +28,18 @@ extern "C" {
 namespace nvram {
 
 // Abstraction used by the protobuf decoder to read data. The idea here is that
-// |InputStreamBuffer| maintains a window of the data to be read. Whenever the
-// window is exhausted, the next window must be set up. This latter operation is
-// left for implementation in subclasses, which is entirely free to pull its
-// data from anywhere.
+// |InputStreamBuffer| maintains a window of the data to be read. Access to the
+// contents of the current window is direct, i.e. doesn't need to go through
+// virtual dispatch to subclasses. Whenever the window is exhausted, the next
+// window must be set up. This latter operation is left for implementation of
+// the virtual |Advance()| member function in subclasses, which is entirely free
+// to pull its data from anywhere.
 class NVRAM_EXPORT InputStreamBuffer {
  public:
-  InputStreamBuffer();
+  InputStreamBuffer() = default;
   InputStreamBuffer(const void* data, size_t size);
   InputStreamBuffer(const void* start, const void* end);
-  virtual ~InputStreamBuffer();
+  virtual ~InputStreamBuffer() = default;
 
   // Checks whether the stream is exhausted;
   bool Done();
@@ -81,7 +83,7 @@ class NVRAM_EXPORT NestedInputStreamBuffer : public InputStreamBuffer {
   // |delegate|. Note that |delegate| must remain valid throughout the life time
   // of this |NestedInputStreamBuffer|.
   NestedInputStreamBuffer(InputStreamBuffer* delegate, size_t size);
-  ~NestedInputStreamBuffer() override;
+  ~NestedInputStreamBuffer() override = default;
 
  private:
   // InputStreamBuffer:
@@ -91,13 +93,20 @@ class NVRAM_EXPORT NestedInputStreamBuffer : public InputStreamBuffer {
   size_t remaining_;
 };
 
-// Abstraction used by the protobuf decoder to output data.
+// Abstraction used by the protobuf decoder to output data. This class maintains
+// a current window of memory to write output to. Access to the current window's
+// bytes is direct and doesn't require virtual dispatch. Once the capacity of
+// the current window is exhausted, the virtual |Advance()| member function is
+// invoked to set up a new window. Subclasses are entirely free to implement
+// this operation as appropriate for their I/O mechanism, for example a
+// socket-based implementations might flush the buffer to the socket and reset
+// the window pointers to accept more output.
 class NVRAM_EXPORT OutputStreamBuffer {
  public:
-  OutputStreamBuffer();
+  OutputStreamBuffer() = default;
   OutputStreamBuffer(void* data, size_t size);
   OutputStreamBuffer(void* data, void* end);
-  virtual ~OutputStreamBuffer();
+  virtual ~OutputStreamBuffer() = default;
 
   // Checks whether the stream is exhausted.
   bool Done();
@@ -133,7 +142,7 @@ class NVRAM_EXPORT OutputStreamBuffer {
 class NVRAM_EXPORT CountingOutputStreamBuffer : public OutputStreamBuffer {
  public:
   CountingOutputStreamBuffer();
-  ~CountingOutputStreamBuffer() override;
+  ~CountingOutputStreamBuffer() override = default;
 
   size_t bytes_written() const {
     return bytes_written_ + (pos_ - scratch_space_);
@@ -147,7 +156,13 @@ class NVRAM_EXPORT CountingOutputStreamBuffer : public OutputStreamBuffer {
   // We share a single scratch buffer that all |CountingOutputStreamBuffer|
   // instances use as the destination for writes. Its contents are pretty much
   // unpredictable.
-  static constexpr size_t kScratchSpaceSize = 1024;
+  //
+  // TODO(mnissler): This adds a static 256 bytes memory allocation to each
+  // process linking to this code. If that becomes a problem, we might want to
+  // be smarter here and dynamically allocate a chunk of memory only when it's
+  // needed, or maybe even map some address space that's not even backed by
+  // actual memory (not sure that's possible).
+  static constexpr size_t kScratchSpaceSize = 256;
   static uint8_t scratch_space_[kScratchSpaceSize];
 
   // Number of bytes that had been written when the last |Advance()| call
@@ -163,14 +178,14 @@ class NVRAM_EXPORT BlobOutputStreamBuffer : public OutputStreamBuffer {
   // |blob|, which will get resized as necessary. Note that |blob| must remain
   // valid for the life time of the |BlobOutputStreamBuffer| object.
   BlobOutputStreamBuffer(Blob* blob);
-  virtual ~BlobOutputStreamBuffer();
+  ~BlobOutputStreamBuffer() override = default;
 
   // Truncate the blob to match the current output size.
   bool Truncate();
 
  protected:
   // OutputStreamBuffer:
-  virtual bool Advance() override;
+  bool Advance() override;
 
  private:
   Blob* blob_;
