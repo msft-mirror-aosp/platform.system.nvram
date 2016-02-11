@@ -14,16 +14,22 @@
 # limitations under the License.
 #
 
-LOCAL_PATH := $(call my-dir)
+LOCAL_DIR := $(GET_LOCAL_DIR)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := libnvram-core-tests
-LOCAL_MODULE_TAGS := debug
-LOCAL_SRC_FILES := \
-	fake_storage.cpp \
-	nvram_manager_test.cpp
-LOCAL_CFLAGS := -Wall -Werror -Wextra -DHAS_GTEST
-LOCAL_CLANG := true
-LOCAL_STATIC_LIBRARIES := libnvram-core-host libmincrypt
-LOCAL_SHARED_LIBRARIES := libnvram-messages-host
-include $(BUILD_HOST_NATIVE_TEST)
+MODULE := $(LOCAL_DIR)
+
+MODULE_SRCS += \
+	$(LOCAL_DIR)/nvram_manager_test.cpp \
+	$(LOCAL_DIR)/fake_storage.cpp \
+	$(LOCAL_DIR)/gtest_stubs.cpp \
+	$(LOCAL_DIR)/manifest.c
+
+MODULE_CPPFLAGS := -Wall -Werror -Wextra -std=c++11
+
+MODULE_DEPS += \
+	app/trusty \
+	lib/libc-trusty \
+	system/nvram/core
+
+include make/module.mk
+

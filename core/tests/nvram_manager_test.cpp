@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+#if defined(HAS_GTEST)
 #include <gtest/gtest.h>
+#else
+#include "gtest_stubs.h"
+#endif
 
 #include <string.h>
 
