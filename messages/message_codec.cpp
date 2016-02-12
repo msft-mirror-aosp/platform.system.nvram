@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <nvram/message_codec.h>
+#include <nvram/messages/message_codec.h>
 
 namespace nvram {
 namespace proto {

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include <nvram/nvram_messages.h>
+#include <nvram/messages/nvram_messages.h>
 
-#include <nvram/blob.h>
-#include <nvram/io.h>
-#include <nvram/proto.hpp>
+#include <nvram/messages/blob.h>
+#include <nvram/messages/io.h>
+#include <nvram/messages/proto.hpp>
 
 namespace nvram {
 

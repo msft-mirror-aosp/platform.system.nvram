@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include <nvram/io.h>
+#include <nvram/messages/io.h>
 
 extern "C" {
 #include <string.h>
 }
 
-#include <nvram/compiler.h>
+#include <nvram/messages/compiler.h>
 
 namespace nvram {
 namespace {

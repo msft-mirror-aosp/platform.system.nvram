@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_TYPE_TRAITS_H_
-#define NVRAM_TYPE_TRAITS_H_
+#ifndef NVRAM_MESSAGES_TYPE_TRAITS_H_
+#define NVRAM_MESSAGES_TYPE_TRAITS_H_
 
 extern "C" {
 #include <stddef.h>
@@ -91,4 +91,4 @@ make_index_sequence(){
 
 }  // namespace nvram
 
-#endif  // NVRAM_TYPE_TRAITS_H_
+#endif  // NVRAM_MESSAGES_TYPE_TRAITS_H_

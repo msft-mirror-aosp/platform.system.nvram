@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#ifndef NVRAM_IO_H_
-#define NVRAM_IO_H_
+#ifndef NVRAM_MESSAGES_IO_H_
+#define NVRAM_MESSAGES_IO_H_
 
 extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 }
 
-#include <nvram/blob.h>
-#include <nvram/compiler.h>
+#include <nvram/messages/blob.h>
+#include <nvram/messages/compiler.h>
 
 namespace nvram {
 
@@ -297,4 +297,4 @@ class NVRAM_EXPORT ProtoWriter {
 
 }  // namespace nvram
 
-#endif  // NVRAM_IO_H_
+#endif  // NVRAM_MESSAGES_IO_H_
