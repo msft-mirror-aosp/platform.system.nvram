@@ -31,6 +31,16 @@ namespace nvram {
 // objects and uses the persistence layer to read and write them from persistent
 // storage.
 class NvramManager {
+ public:
+  nvram_result_t GetInfo(const GetInfoRequest& request,
+                         GetInfoResponse* response);
+  nvram_result_t CreateSpace(const CreateSpaceRequest& request,
+                             CreateSpaceResponse* response);
+  nvram_result_t GetSpaceInfo(const GetSpaceInfoRequest& request,
+                              GetSpaceInfoResponse* response);
+  nvram_result_t DisableCreate(const DisableCreateRequest& request,
+                               DisableCreateResponse* response);
+
  private:
   // Holds transient state corresponding to an allocated NVRAM space, i.e. meta
   // data valid for a single boot. One instance of this struct is kept in memory
@@ -41,13 +51,50 @@ class NvramManager {
     bool read_locked = false;
   };
 
+  // |SpaceRecord| holds all information known about a space. It includes both
+  // an index and pointer to the transient information held in the
+  // |SpaceListEntry| in the |spaces_| array and the persistent |NvramSpace|
+  // state held in permanent storage. We only load the persistent space data
+  // from storage when it is needed for an operation, such as reading and
+  // writing space contents.
+  struct SpaceRecord {
+    // Access control check for write access to the space. The
+    // |authorization_value| is only relevant if the space was configured to
+    // require authorization. Returns RESULT_SUCCESS if write access is
+    // permitted and a suitable result code to return to the client on failure.
+    nvram_result_t CheckWriteAccess(const Blob& authorization_value);
+
+    // Access control check for read access to the space. The
+    // |authorization_value| is only relevant if the space was configured to
+    // require authorization. Returns RESULT_SUCCESS if write access is
+    // permitted and a suitable result code to return the client on failure.
+    nvram_result_t CheckReadAccess(const Blob& authorization_value);
+
+    size_t array_index = 0;
+    SpaceListEntry* transient = nullptr;
+    NvramSpace persistent;
+  };
+
   // Initializes |header_| from storage if that hasn't happened already. Returns
   // true if NvramManager object is initialized and ready to serve requests. May
   // be called again after failure to attempt initialization again.
   bool Initialize();
 
+  // Finds the array index in |spaces_| that corresponds to |space_index|.
+  // Returns |kMaxSpaces| if there is no matching space.
+  size_t FindSpace(uint32_t space_index);
+
+  // Loads space data for |index|. Fills in |space_record| and returns true if
+  // successful. Returns false and sets |result| on error.
+  bool LoadSpaceRecord(uint32_t index,
+                       SpaceRecord* space_record,
+                       nvram_result_t* result);
+
   // Writes the header to storage and returns a suitable status code.
   nvram_result_t WriteHeader(Optional<uint32_t> provisional_index);
+
+  // Write |space| data for |index|.
+  nvram_result_t WriteSpace(uint32_t index, const NvramSpace& space);
 
   // Maximum number of NVRAM spaces we're willing to allocate.
   static constexpr size_t kMaxSpaces = 32;
