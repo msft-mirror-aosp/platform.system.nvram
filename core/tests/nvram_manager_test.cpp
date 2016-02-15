@@ -225,7 +225,7 @@ TEST_F(NvramManagerTest, CreateSpace_Success) {
   // Make a call to CreateSpace, which should succeed.
   CreateSpaceRequest create_space_request;
   create_space_request.index = 1;
-  create_space_request.size = 16;
+  create_space_request.size = 32;
   ASSERT_TRUE(create_space_request.controls.Resize(5));
   create_space_request.controls[0] = NV_CONTROL_BOOT_WRITE_LOCK;
   create_space_request.controls[1] = NV_CONTROL_BOOT_READ_LOCK;
@@ -244,7 +244,7 @@ TEST_F(NvramManagerTest, CreateSpace_Success) {
   EXPECT_EQ(NV_RESULT_SUCCESS, nvram.GetSpaceInfo(get_space_info_request,
                                                   &get_space_info_response));
 
-  EXPECT_EQ(16u, get_space_info_response.size);
+  EXPECT_EQ(32u, get_space_info_response.size);
   EXPECT_EQ(GetControlsMask(create_space_request.controls),
             GetControlsMask(get_space_info_response.controls));
   EXPECT_EQ(false, get_space_info_response.read_locked);
@@ -324,6 +324,21 @@ TEST_F(NvramManagerTest, CreateSpace_ControlWriteLockExclusive) {
   ASSERT_TRUE(create_space_request.controls.Resize(2));
   create_space_request.controls[0] = NV_CONTROL_BOOT_WRITE_LOCK;
   create_space_request.controls[1] = NV_CONTROL_PERSISTENT_WRITE_LOCK;
+
+  CreateSpaceResponse create_space_response;
+  EXPECT_EQ(NV_RESULT_INVALID_PARAMETER,
+            nvram.CreateSpace(create_space_request, &create_space_response));
+}
+
+TEST_F(NvramManagerTest, CreateSpace_WriteExtendSpaceSize) {
+  NvramManager nvram;
+
+  // Write-extend spaces must match SHA256 hash size, i.e. 32 bytes.
+  CreateSpaceRequest create_space_request;
+  create_space_request.index = 1;
+  create_space_request.size = 16;
+  ASSERT_TRUE(create_space_request.controls.Resize(1));
+  create_space_request.controls[0] = NV_CONTROL_WRITE_EXTEND;
 
   CreateSpaceResponse create_space_response;
   EXPECT_EQ(NV_RESULT_INVALID_PARAMETER,

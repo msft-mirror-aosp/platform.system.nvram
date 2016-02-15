@@ -36,7 +36,7 @@ LOCAL_SRC_FILES := \
 	memory_storage.cpp \
 	testing_module.c \
 	testing_nvram_implementation.cpp
-LOCAL_STATIC_LIBRARIES := libnvram-core libnvram-hal liblog
+LOCAL_STATIC_LIBRARIES := libnvram-core libnvram-hal libmincrypt liblog
 LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
 LOCAL_MODULE_TAGS := optional
