@@ -32,14 +32,29 @@ namespace nvram {
 // storage.
 class NvramManager {
  public:
+  // Looks at |request| to determine the command to execute, extracts the
+  // request parameters and invokes the correct handler function. Stores status
+  // and output parameters in |response|.
+  void Dispatch(const Request& request, Response* response);
+
   nvram_result_t GetInfo(const GetInfoRequest& request,
                          GetInfoResponse* response);
   nvram_result_t CreateSpace(const CreateSpaceRequest& request,
                              CreateSpaceResponse* response);
   nvram_result_t GetSpaceInfo(const GetSpaceInfoRequest& request,
                               GetSpaceInfoResponse* response);
+  nvram_result_t DeleteSpace(const DeleteSpaceRequest& request,
+                             DeleteSpaceResponse* response);
   nvram_result_t DisableCreate(const DisableCreateRequest& request,
                                DisableCreateResponse* response);
+  nvram_result_t WriteSpace(const WriteSpaceRequest& request,
+                            WriteSpaceResponse* response);
+  nvram_result_t ReadSpace(const ReadSpaceRequest& request,
+                           ReadSpaceResponse* response);
+  nvram_result_t LockSpaceWrite(const LockSpaceWriteRequest& request,
+                                LockSpaceWriteResponse* response);
+  nvram_result_t LockSpaceRead(const LockSpaceReadRequest& request,
+                               LockSpaceReadResponse* response);
 
  private:
   // Holds transient state corresponding to an allocated NVRAM space, i.e. meta

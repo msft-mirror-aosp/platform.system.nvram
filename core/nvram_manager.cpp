@@ -58,7 +58,78 @@ nvram_result_t GetControlsVector(const NvramSpace& space,
   return NV_RESULT_SUCCESS;
 }
 
+// Constant time memory block comparison.
+bool ConstantTimeEquals(const Blob& a, const Blob& b) {
+  if (a.size() != b.size())
+    return false;
+
+  // The volatile qualifiers prevent the compiler from making assumptions that
+  // allow shortcuts:
+  //  * The entire array data must be read from memory.
+  //  * Marking |result| volatile ensures the subsequent loop iterations must
+  //    still store to |result|, thus avoiding the loop to exit early.
+  // This achieves the desired constant-time behavior.
+  volatile const uint8_t* data_a = a.data();
+  volatile const uint8_t* data_b = b.data();
+  volatile uint8_t result = 0;
+  for (size_t i = 0; i < a.size(); ++i) {
+    result |= data_a[i] ^ data_b[i];
+  }
+
+  return result == 0;
+}
+
 }  // namespace
+
+// Looks at |request| to determine the command to execute, then invokes
+// the appropriate handler.
+void NvramManager::Dispatch(const nvram::Request& request,
+                            nvram::Response* response) {
+  nvram_result_t result = NV_RESULT_INVALID_PARAMETER;
+  const nvram::RequestUnion& input = request.payload;
+  nvram::ResponseUnion* output = &response->payload;
+
+  switch (input.which()) {
+    case nvram::COMMAND_GET_INFO:
+      result = GetInfo(*input.get<COMMAND_GET_INFO>(),
+                       &output->Activate<COMMAND_GET_INFO>());
+      break;
+    case nvram::COMMAND_CREATE_SPACE:
+      result = CreateSpace(*input.get<COMMAND_CREATE_SPACE>(),
+                           &output->Activate<COMMAND_CREATE_SPACE>());
+      break;
+    case nvram::COMMAND_GET_SPACE_INFO:
+      result = GetSpaceInfo(*input.get<COMMAND_GET_SPACE_INFO>(),
+                            &output->Activate<COMMAND_GET_SPACE_INFO>());
+      break;
+    case nvram::COMMAND_DELETE_SPACE:
+      result = DeleteSpace(*input.get<COMMAND_DELETE_SPACE>(),
+                           &output->Activate<COMMAND_DELETE_SPACE>());
+      break;
+    case nvram::COMMAND_DISABLE_CREATE:
+      result = DisableCreate(*input.get<COMMAND_DISABLE_CREATE>(),
+                             &output->Activate<COMMAND_DISABLE_CREATE>());
+      break;
+    case nvram::COMMAND_WRITE_SPACE:
+      result = WriteSpace(*input.get<COMMAND_WRITE_SPACE>(),
+                          &output->Activate<COMMAND_WRITE_SPACE>());
+      break;
+    case nvram::COMMAND_READ_SPACE:
+      result = ReadSpace(*input.get<COMMAND_READ_SPACE>(),
+                         &output->Activate<COMMAND_READ_SPACE>());
+      break;
+    case nvram::COMMAND_LOCK_SPACE_WRITE:
+      result = LockSpaceWrite(*input.get<COMMAND_LOCK_SPACE_WRITE>(),
+                              &output->Activate<COMMAND_LOCK_SPACE_WRITE>());
+      break;
+    case nvram::COMMAND_LOCK_SPACE_READ:
+      result = LockSpaceRead(*input.get<COMMAND_LOCK_SPACE_READ>(),
+                             &output->Activate<COMMAND_LOCK_SPACE_READ>());
+      break;
+  }
+
+  response->result = result;
+}
 
 nvram_result_t NvramManager::GetInfo(const GetInfoRequest& /* request */,
                                      GetInfoResponse* response) {
@@ -210,6 +281,55 @@ nvram_result_t NvramManager::GetSpaceInfo(const GetSpaceInfoRequest& request,
   return NV_RESULT_SUCCESS;
 }
 
+nvram_result_t NvramManager::DeleteSpace(const DeleteSpaceRequest& request,
+                                         DeleteSpaceResponse* /* response */) {
+  const uint32_t index = request.index;
+  NVRAM_LOG_INFO("DeleteSpace Ox%x", index);
+
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+  SpaceRecord space_record;
+  nvram_result_t result;
+  if (!LoadSpaceRecord(index, &space_record, &result)) {
+    return result;
+  }
+
+  result = space_record.CheckWriteAccess(request.authorization_value);
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  // Delete the space. First mark the space as provisionally removed in the
+  // header. Then, delete the space data from storage. This allows orphaned
+  // space data be cleaned up after a crash.
+  SpaceListEntry tmp = spaces_[space_record.array_index];
+  spaces_[space_record.array_index] = spaces_[num_spaces_ - 1];
+  --num_spaces_;
+  result = WriteHeader(Optional<uint32_t>(index));
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  switch (persistence::DeleteSpace(index)) {
+    case storage::Status::kStorageError:
+      break;
+    case storage::Status::kNotFound:
+      // The space was missing even if it shouldn't have been. Log an error, but
+      // return success as we're in the desired state.
+      NVRAM_LOG_ERR("Space 0x%x data missing on deletion.", index);
+      return NV_RESULT_SUCCESS;
+    case storage::Status::kSuccess:
+      return NV_RESULT_SUCCESS;
+  }
+
+  // Failed to delete, re-add the transient state to |spaces_|.
+  NVRAM_LOG_ERR("Failed to delete space 0x%x data.", index);
+  spaces_[num_spaces_] = tmp;
+  ++num_spaces_;
+  return NV_RESULT_INTERNAL_ERROR;
+}
+
 nvram_result_t NvramManager::DisableCreate(
     const DisableCreateRequest& /* request */,
     DisableCreateResponse* /* response */) {
@@ -222,6 +342,183 @@ nvram_result_t NvramManager::DisableCreate(
   // such that it remains effective after a reboot.
   disable_create_ = true;
   return WriteHeader(Optional<uint32_t>());
+}
+
+nvram_result_t NvramManager::WriteSpace(const WriteSpaceRequest& request,
+                                        WriteSpaceResponse* /* response */) {
+  const uint32_t index = request.index;
+  NVRAM_LOG_INFO("WriteSpace Ox%x", index);
+
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+  SpaceRecord space_record;
+  nvram_result_t result;
+  if (!LoadSpaceRecord(index, &space_record, &result)) {
+    return result;
+  }
+
+  result = space_record.CheckWriteAccess(request.authorization_value);
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  if (space_record.persistent.HasControl(NV_CONTROL_WRITE_EXTEND)) {
+    // TODO(mnissler): implement, cf. b/26973380.
+    return NV_RESULT_INTERNAL_ERROR;
+  } else {
+    Blob& contents = space_record.persistent.contents;
+    if (contents.size() < request.buffer.size()) {
+      return NV_RESULT_INVALID_PARAMETER;
+    }
+
+    memcpy(contents.data(), request.buffer.data(), request.buffer.size());
+    memset(contents.data() + request.buffer.size(), 0x0,
+           contents.size() - request.buffer.size());
+  }
+
+  return WriteSpace(index, space_record.persistent);
+}
+
+nvram_result_t NvramManager::ReadSpace(const ReadSpaceRequest& request,
+                                       ReadSpaceResponse* response) {
+  const uint32_t index = request.index;
+  NVRAM_LOG_INFO("ReadSpace Ox%x", index);
+
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+  SpaceRecord space_record;
+  nvram_result_t result;
+  if (!LoadSpaceRecord(index, &space_record, &result)) {
+    return result;
+  }
+
+  result = space_record.CheckReadAccess(request.authorization_value);
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  if (!response->buffer.Assign(space_record.persistent.contents.data(),
+                               space_record.persistent.contents.size())) {
+    NVRAM_LOG_ERR("Allocation failure.");
+    return NV_RESULT_INTERNAL_ERROR;
+  }
+
+  return NV_RESULT_SUCCESS;
+}
+
+nvram_result_t NvramManager::LockSpaceWrite(
+    const LockSpaceWriteRequest& request,
+    LockSpaceWriteResponse* /* response */) {
+  const uint32_t index = request.index;
+  NVRAM_LOG_INFO("LockSpaceWrite Ox%x", index);
+
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+  SpaceRecord space_record;
+  nvram_result_t result;
+  if (!LoadSpaceRecord(index, &space_record, &result)) {
+    return result;
+  }
+
+  result = space_record.CheckWriteAccess(request.authorization_value);
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  if (space_record.persistent.HasControl(NV_CONTROL_PERSISTENT_WRITE_LOCK)) {
+    space_record.persistent.SetFlag(NvramSpace::kFlagWriteLocked);
+    return WriteSpace(index, space_record.persistent);
+  } else if (space_record.persistent.HasControl(NV_CONTROL_BOOT_WRITE_LOCK)) {
+    space_record.transient->write_locked = true;
+    return NV_RESULT_SUCCESS;
+  }
+
+  NVRAM_LOG_ERR("Space not configured for write locking.");
+  return NV_RESULT_INVALID_PARAMETER;
+}
+
+nvram_result_t NvramManager::LockSpaceRead(
+    const LockSpaceReadRequest& request,
+    LockSpaceReadResponse* /* response */) {
+  const uint32_t index = request.index;
+  NVRAM_LOG_INFO("LockSpaceRead Ox%x", index);
+
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+  SpaceRecord space_record;
+  nvram_result_t result;
+  if (!LoadSpaceRecord(index, &space_record, &result)) {
+    return result;
+  }
+
+  result = space_record.CheckReadAccess(request.authorization_value);
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  if (space_record.persistent.HasControl(NV_CONTROL_BOOT_READ_LOCK)) {
+    space_record.transient->read_locked = true;
+    return NV_RESULT_SUCCESS;
+  }
+
+  NVRAM_LOG_ERR("Space not configured for read locking.");
+  return NV_RESULT_INVALID_PARAMETER;
+}
+
+nvram_result_t NvramManager::SpaceRecord::CheckWriteAccess(
+    const Blob& authorization_value) {
+  if (persistent.HasControl(NV_CONTROL_PERSISTENT_WRITE_LOCK)) {
+    if (persistent.HasFlag(NvramSpace::kFlagWriteLocked)) {
+      NVRAM_LOG_INFO("Attempt to write persistently locked space 0x%x.",
+                     transient->index);
+      return NV_RESULT_OPERATION_DISABLED;
+    }
+  } else if (persistent.HasControl(NV_CONTROL_BOOT_WRITE_LOCK)) {
+    if (transient->write_locked) {
+      NVRAM_LOG_INFO("Attempt to write per-boot locked space 0x%x.",
+                     transient->index);
+      return NV_RESULT_OPERATION_DISABLED;
+    }
+  }
+
+  if (persistent.HasControl(NV_CONTROL_WRITE_AUTHORIZATION) &&
+      !ConstantTimeEquals(persistent.authorization_value,
+                          authorization_value)) {
+    NVRAM_LOG_INFO(
+        "Authorization value mismatch for write access to space 0x%x.",
+        transient->index);
+    return NV_RESULT_ACCESS_DENIED;
+  }
+
+  // All checks passed, allow the write.
+  return NV_RESULT_SUCCESS;
+}
+
+nvram_result_t NvramManager::SpaceRecord::CheckReadAccess(
+    const Blob& authorization_value) {
+  if (persistent.HasControl(NV_CONTROL_BOOT_READ_LOCK)) {
+    if (transient->read_locked) {
+      NVRAM_LOG_INFO("Attempt to read per-boot locked space 0x%x.",
+                     transient->index);
+      return NV_RESULT_OPERATION_DISABLED;
+    }
+  }
+
+  if (persistent.HasControl(NV_CONTROL_READ_AUTHORIZATION) &&
+      !ConstantTimeEquals(persistent.authorization_value,
+                          authorization_value)) {
+    NVRAM_LOG_INFO(
+        "Authorization value mismatch for read access to space 0x%x.",
+        transient->index);
+    return NV_RESULT_ACCESS_DENIED;
+  }
+
+  // All checks passed, allow the read.
+  return NV_RESULT_SUCCESS;
 }
 
 bool NvramManager::Initialize() {
