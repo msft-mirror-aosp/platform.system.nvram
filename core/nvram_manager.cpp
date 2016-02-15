@@ -319,27 +319,26 @@ nvram_result_t NvramManager::DeleteSpace(const DeleteSpaceRequest& request,
   spaces_[space_record.array_index] = spaces_[num_spaces_ - 1];
   --num_spaces_;
   result = WriteHeader(Optional<uint32_t>(index));
-  if (result != NV_RESULT_SUCCESS) {
-    return result;
-  }
-
-  switch (persistence::DeleteSpace(index)) {
-    case storage::Status::kStorageError:
-      break;
-    case storage::Status::kNotFound:
-      // The space was missing even if it shouldn't have been. Log an error, but
-      // return success as we're in the desired state.
-      NVRAM_LOG_ERR("Space 0x%x data missing on deletion.", index);
-      return NV_RESULT_SUCCESS;
-    case storage::Status::kSuccess:
-      return NV_RESULT_SUCCESS;
+  if (result == NV_RESULT_SUCCESS) {
+    switch (persistence::DeleteSpace(index)) {
+      case storage::Status::kStorageError:
+        NVRAM_LOG_ERR("Failed to delete space 0x%x data.", index);
+        result = NV_RESULT_INTERNAL_ERROR;
+        break;
+      case storage::Status::kNotFound:
+        // The space was missing even if it shouldn't have been. Log an error,
+        // but return success as we're in the desired state.
+        NVRAM_LOG_ERR("Space 0x%x data missing on deletion.", index);
+        return NV_RESULT_SUCCESS;
+      case storage::Status::kSuccess:
+        return NV_RESULT_SUCCESS;
+    }
   }
 
   // Failed to delete, re-add the transient state to |spaces_|.
-  NVRAM_LOG_ERR("Failed to delete space 0x%x data.", index);
   spaces_[num_spaces_] = tmp;
   ++num_spaces_;
-  return NV_RESULT_INTERNAL_ERROR;
+  return result;
 }
 
 nvram_result_t NvramManager::DisableCreate(
@@ -351,9 +350,16 @@ nvram_result_t NvramManager::DisableCreate(
     return NV_RESULT_INTERNAL_ERROR;
 
   // Set the |disable_create_| flag and call |WriteHeader| to persist the flag
-  // such that it remains effective after a reboot.
+  // such that it remains effective after a reboot. Make sure to restore the
+  // current value of |disable_create_| if the write call fails, as we return an
+  // error in that case and client code would not expect state changes.
+  bool disable_create_previous = disable_create_;
   disable_create_ = true;
-  return WriteHeader(Optional<uint32_t>());
+  nvram_result_t result = WriteHeader(Optional<uint32_t>());
+  if (result != NV_RESULT_SUCCESS) {
+    disable_create_ = disable_create_previous;
+  }
+  return result;
 }
 
 nvram_result_t NvramManager::WriteSpace(const WriteSpaceRequest& request,
@@ -646,9 +652,9 @@ bool NvramManager::Initialize() {
                       provisional_index.value());
         return false;
       case storage::Status::kNotFound:
-        NVRAM_LOG_ERR("Provisional space 0x%x absent on deletion.",
-                      provisional_index.value());
-        return false;
+        // The space isn't present in storage. This may happen if the space
+        // deletion succeeded, but the header wasn't written subsequently.
+        break;
       case storage::Status::kSuccess:
         break;
     }
