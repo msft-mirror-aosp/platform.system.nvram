@@ -16,6 +16,7 @@
 
 #include "nvram/core/nvram_manager.h"
 
+#include <mincrypt/sha256.h>
 #include <nvram/core/logger.h>
 
 extern "C" {
@@ -77,6 +78,12 @@ bool ConstantTimeEquals(const Blob& a, const Blob& b) {
   }
 
   return result == 0;
+}
+
+// A standard minimum function.
+template <typename Type>
+const Type& min(const Type& a, const Type& b) {
+  return (a < b) ? a : b;
 }
 
 }  // namespace
@@ -199,6 +206,11 @@ nvram_result_t NvramManager::CreateSpace(const CreateSpaceRequest& request,
   if ((controls & (1 << NV_CONTROL_PERSISTENT_WRITE_LOCK)) != 0 &&
       (controls & (1 << NV_CONTROL_BOOT_WRITE_LOCK)) != 0) {
     NVRAM_LOG_INFO("Write lock controls are exclusive.");
+    return NV_RESULT_INVALID_PARAMETER;
+  }
+  if ((controls & (1 << NV_CONTROL_WRITE_EXTEND)) != 0 &&
+      request.size != SHA256_DIGEST_SIZE) {
+    NVRAM_LOG_INFO("Write-extended space size must be %d.", SHA256_DIGEST_SIZE);
     return NV_RESULT_INVALID_PARAMETER;
   }
 
@@ -363,11 +375,25 @@ nvram_result_t NvramManager::WriteSpace(const WriteSpaceRequest& request,
     return result;
   }
 
+  Blob& contents = space_record.persistent.contents;
   if (space_record.persistent.HasControl(NV_CONTROL_WRITE_EXTEND)) {
-    // TODO(mnissler): implement, cf. b/26973380.
-    return NV_RESULT_INTERNAL_ERROR;
+    // Compute the hash of existing contents concatenated with input.
+    SHA256_CTX sha256_context;
+    SHA256_init(&sha256_context);
+    SHA256_update(&sha256_context, contents.data(), contents.size());
+    SHA256_update(&sha256_context, request.buffer.data(),
+                  request.buffer.size());
+
+    // Make sure to handle both short and long space sizes gracefully,
+    // truncating or extending with 0 bytes as necessary. Even though
+    // |CreateSpace()| rejects |NV_CONTROL_WRITE_EXTEND| spaces that are not of
+    // size |SHA256_DIGEST_SIZE|, it's better to avoid any assumptions about
+    // data read from storage.
+    size_t hash_size =
+        min(contents.size(), static_cast<size_t>(SHA256_DIGEST_SIZE));
+    memcpy(contents.data(), SHA256_final(&sha256_context), hash_size);
+    memset(contents.data() + hash_size, 0x0, contents.size() - hash_size);
   } else {
-    Blob& contents = space_record.persistent.contents;
     if (contents.size() < request.buffer.size()) {
       return NV_RESULT_INVALID_PARAMETER;
     }

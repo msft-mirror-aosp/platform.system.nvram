@@ -21,6 +21,7 @@ LOCAL_MODULE := libnvram-core
 LOCAL_SRC_FILES := \
 	nvram_manager.cpp \
 	persistence.cpp
+LOCAL_STATIC_LIBRARIES := libmincrypt
 LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_CFLAGS := -Wall -Werror -Wextra
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
@@ -32,6 +33,7 @@ LOCAL_MODULE := libnvram-core-host
 LOCAL_SRC_FILES := \
 	nvram_manager.cpp \
 	persistence.cpp
+LOCAL_STATIC_LIBRARIES := libmincrypt
 LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 LOCAL_CFLAGS := -Wall -Werror -Wextra
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
