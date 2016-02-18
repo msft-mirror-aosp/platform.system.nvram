@@ -163,9 +163,9 @@ nvram_result_t device_is_space_locked(const nvram_device_t* device,
 nvram_result_t device_create_space(const nvram_device_t* device,
                                    uint32_t index,
                                    uint64_t size_in_bytes,
-                                   nvram_control_t* control_list,
+                                   const nvram_control_t* control_list,
                                    uint32_t list_size,
-                                   uint8_t* authorization_value,
+                                   const uint8_t* authorization_value,
                                    uint32_t authorization_value_size) {
   nvram::CreateSpaceRequest create_space_request;
   create_space_request.index = index;
@@ -187,7 +187,7 @@ nvram_result_t device_create_space(const nvram_device_t* device,
 
 nvram_result_t device_delete_space(const nvram_device_t* device,
                                    uint32_t index,
-                                   uint8_t* authorization_value,
+                                   const uint8_t* authorization_value,
                                    uint32_t authorization_value_size) {
   nvram::DeleteSpaceRequest delete_space_request;
   delete_space_request.index = index;
@@ -211,7 +211,7 @@ nvram_result_t device_write_space(const nvram_device_t* device,
                                   uint32_t index,
                                   const uint8_t* buffer,
                                   uint64_t buffer_size,
-                                  uint8_t* authorization_value,
+                                  const uint8_t* authorization_value,
                                   uint32_t authorization_value_size) {
   nvram::WriteSpaceRequest write_space_request;
   write_space_request.index = index;
@@ -228,7 +228,7 @@ nvram_result_t device_write_space(const nvram_device_t* device,
 nvram_result_t device_read_space(const nvram_device_t* device,
                                  uint32_t index,
                                  uint64_t num_bytes_to_read,
-                                 uint8_t* authorization_value,
+                                 const uint8_t* authorization_value,
                                  uint32_t authorization_value_size,
                                  uint8_t* buffer,
                                  uint64_t* bytes_read) {
@@ -249,7 +249,7 @@ nvram_result_t device_read_space(const nvram_device_t* device,
 
 nvram_result_t device_enable_write_lock(const nvram_device_t* device,
                                         uint32_t index,
-                                        uint8_t* authorization_value,
+                                        const uint8_t* authorization_value,
                                         uint32_t authorization_value_size) {
   nvram::LockSpaceWriteRequest lock_space_write_request;
   lock_space_write_request.index = index;
@@ -264,7 +264,7 @@ nvram_result_t device_enable_write_lock(const nvram_device_t* device,
 
 nvram_result_t device_enable_read_lock(const nvram_device_t* device,
                                        uint32_t index,
-                                       uint8_t* authorization_value,
+                                       const uint8_t* authorization_value,
                                        uint32_t authorization_value_size) {
   nvram::LockSpaceReadRequest lock_space_read_request;
   lock_space_read_request.index = index;
