@@ -27,3 +27,17 @@ LOCAL_CFLAGS := -Wall -Werror -Wextra
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
 include $(BUILD_STATIC_LIBRARY)
+
+# nvram.testing is the software-only testing NVRAM HAL module.
+include $(CLEAR_VARS)
+LOCAL_MODULE := nvram.testing
+LOCAL_MODULE_RELATIVE_PATH := hw
+LOCAL_SRC_FILES := \
+	memory_storage.cpp \
+	testing_module.c \
+	testing_nvram_implementation.cpp
+LOCAL_STATIC_LIBRARIES := libnvram-core libnvram-hal liblog
+LOCAL_SHARED_LIBRARIES := libnvram-messages
+LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
+LOCAL_MODULE_TAGS := optional
+include $(BUILD_SHARED_LIBRARY)
