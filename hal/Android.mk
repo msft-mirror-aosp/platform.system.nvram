@@ -43,3 +43,5 @@ LOCAL_STATIC_LIBRARIES := libnvram-core libnvram-hal libmincrypt liblog
 LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
+
+include $(call all-makefiles-under,$(LOCAL_PATH))
