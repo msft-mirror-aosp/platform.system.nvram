@@ -22,11 +22,19 @@
 namespace nvram {
 namespace storage {
 
-// Setup the header storage functions to return Status::kStorageError.
-void SetHeaderError(bool error);
+// Setup the header storage read functions to return Status::kStorageError.
+void SetHeaderReadError(bool error);
 
-// Setup the storage calls for space |index| to return Status::kStorageError.
-void SetSpaceError(uint32_t index, bool error);
+// Setup the header storage write functions to return Status::kStorageError.
+void SetHeaderWriteError(bool error);
+
+// Setup the storage read calls for space |index| to return
+// Status::kStorageError.
+void SetSpaceReadError(uint32_t index, bool error);
+
+// Setup the storage write calls for space |index| to return
+// Status::kStorageError.
+void SetSpaceWriteError(uint32_t index, bool error);
 
 // Clears all storage.
 void Clear();

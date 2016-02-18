@@ -29,7 +29,7 @@ namespace {
 class StorageSlot {
  public:
   Status Load(Blob* blob) {
-    if (error_) {
+    if (read_error_) {
       return Status::kStorageError;
     }
 
@@ -42,7 +42,7 @@ class StorageSlot {
   }
 
   Status Store(const Blob& blob) {
-    if (error_) {
+    if (write_error_) {
       return Status::kStorageError;
     }
 
@@ -51,18 +51,32 @@ class StorageSlot {
     return Status::kSuccess;
   }
 
-  void Clear() {
+  Status Delete() {
+    if (write_error_) {
+      return Status::kStorageError;
+    }
+
     NVRAM_CHECK(blob_.Resize(0));
     present_ = false;
+    return Status::kSuccess;
+  }
+
+  void Clear() {
+    present_ = false;
+    read_error_ = false;
+    write_error_ = false;
+    NVRAM_CHECK(blob_.Resize(0));
   }
 
   bool present() const { return present_; }
   void set_present(bool present) { present_ = present; }
-  void set_error(bool error) { error_ = error; }
+  void set_read_error(bool error) { read_error_ = error; }
+  void set_write_error(bool error) { write_error_ = error; }
 
  private:
   bool present_ = false;
-  bool error_ = false;
+  bool read_error_ = false;
+  bool write_error_ = false;
   Blob blob_;
 };
 
@@ -118,8 +132,12 @@ Status StoreHeader(const Blob& blob) {
   return g_header.Store(blob);
 }
 
-void SetHeaderError(bool error) {
-  g_header.set_error(error);
+void SetHeaderReadError(bool error) {
+  g_header.set_read_error(error);
+}
+
+void SetHeaderWriteError(bool error) {
+  g_header.set_write_error(error);
 }
 
 Status LoadSpace(uint32_t index, Blob* blob) {
@@ -134,11 +152,7 @@ Status StoreSpace(uint32_t index, const Blob& blob) {
 
 Status DeleteSpace(uint32_t index) {
   StorageSlot* slot = FindSlotForIndex(index);
-  if (slot) {
-    slot->Clear();
-  }
-
-  return Status::kSuccess;
+  return slot ? slot->Delete() : Status::kNotFound;
 }
 
 void Clear() {
@@ -148,10 +162,17 @@ void Clear() {
   }
 }
 
-void SetSpaceError(uint32_t index, bool error) {
+void SetSpaceReadError(uint32_t index, bool error) {
   StorageSlot* slot = FindOrCreateSlotForIndex(index);
   if (slot) {
-    slot->set_error(error);
+    slot->set_read_error(error);
+  }
+}
+
+void SetSpaceWriteError(uint32_t index, bool error) {
+  StorageSlot* slot = FindOrCreateSlotForIndex(index);
+  if (slot) {
+    slot->set_write_error(error);
   }
 }
 
