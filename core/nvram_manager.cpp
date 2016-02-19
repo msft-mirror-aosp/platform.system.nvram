@@ -16,12 +16,13 @@
 
 #include "nvram/core/nvram_manager.h"
 
-#include <mincrypt/sha256.h>
-#include <nvram/core/logger.h>
-
 extern "C" {
+#include <inttypes.h>
 #include <string.h>
 }  // extern "C"
+
+#include <mincrypt/sha256.h>
+#include <nvram/core/logger.h>
 
 using namespace nvram::storage;
 
@@ -165,7 +166,7 @@ nvram_result_t NvramManager::GetInfo(const GetInfoRequest& /* request */,
 nvram_result_t NvramManager::CreateSpace(const CreateSpaceRequest& request,
                                          CreateSpaceResponse* /* response */) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("CreateSpace Ox%x", index);
+  NVRAM_LOG_INFO("CreateSpace Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -176,7 +177,7 @@ nvram_result_t NvramManager::CreateSpace(const CreateSpaceRequest& request,
   }
 
   if (FindSpace(index) != kMaxSpaces) {
-    NVRAM_LOG_INFO("Space 0x%x already exists.", index);
+    NVRAM_LOG_INFO("Space 0x%" PRIx32 " already exists.", index);
     return NV_RESULT_SPACE_ALREADY_EXISTS;
   }
 
@@ -261,7 +262,7 @@ nvram_result_t NvramManager::CreateSpace(const CreateSpaceRequest& request,
 nvram_result_t NvramManager::GetSpaceInfo(const GetSpaceInfoRequest& request,
                                           GetSpaceInfoResponse* response) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("GetSpaceInfo Ox%x", index);
+  NVRAM_LOG_INFO("GetSpaceInfo Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -296,7 +297,7 @@ nvram_result_t NvramManager::GetSpaceInfo(const GetSpaceInfoRequest& request,
 nvram_result_t NvramManager::DeleteSpace(const DeleteSpaceRequest& request,
                                          DeleteSpaceResponse* /* response */) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("DeleteSpace Ox%x", index);
+  NVRAM_LOG_INFO("DeleteSpace Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -322,13 +323,13 @@ nvram_result_t NvramManager::DeleteSpace(const DeleteSpaceRequest& request,
   if (result == NV_RESULT_SUCCESS) {
     switch (persistence::DeleteSpace(index)) {
       case storage::Status::kStorageError:
-        NVRAM_LOG_ERR("Failed to delete space 0x%x data.", index);
+        NVRAM_LOG_ERR("Failed to delete space 0x%" PRIx32 " data.", index);
         result = NV_RESULT_INTERNAL_ERROR;
         break;
       case storage::Status::kNotFound:
         // The space was missing even if it shouldn't have been. Log an error,
         // but return success as we're in the desired state.
-        NVRAM_LOG_ERR("Space 0x%x data missing on deletion.", index);
+        NVRAM_LOG_ERR("Space 0x%" PRIx32 " data missing on deletion.", index);
         return NV_RESULT_SUCCESS;
       case storage::Status::kSuccess:
         return NV_RESULT_SUCCESS;
@@ -365,7 +366,7 @@ nvram_result_t NvramManager::DisableCreate(
 nvram_result_t NvramManager::WriteSpace(const WriteSpaceRequest& request,
                                         WriteSpaceResponse* /* response */) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("WriteSpace Ox%x", index);
+  NVRAM_LOG_INFO("WriteSpace Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -415,7 +416,7 @@ nvram_result_t NvramManager::WriteSpace(const WriteSpaceRequest& request,
 nvram_result_t NvramManager::ReadSpace(const ReadSpaceRequest& request,
                                        ReadSpaceResponse* response) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("ReadSpace Ox%x", index);
+  NVRAM_LOG_INFO("ReadSpace Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -444,7 +445,7 @@ nvram_result_t NvramManager::LockSpaceWrite(
     const LockSpaceWriteRequest& request,
     LockSpaceWriteResponse* /* response */) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("LockSpaceWrite Ox%x", index);
+  NVRAM_LOG_INFO("LockSpaceWrite Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -476,7 +477,7 @@ nvram_result_t NvramManager::LockSpaceRead(
     const LockSpaceReadRequest& request,
     LockSpaceReadResponse* /* response */) {
   const uint32_t index = request.index;
-  NVRAM_LOG_INFO("LockSpaceRead Ox%x", index);
+  NVRAM_LOG_INFO("LockSpaceRead Ox%" PRIx32, index);
 
   if (!Initialize())
     return NV_RESULT_INTERNAL_ERROR;
@@ -505,13 +506,14 @@ nvram_result_t NvramManager::SpaceRecord::CheckWriteAccess(
     const Blob& authorization_value) {
   if (persistent.HasControl(NV_CONTROL_PERSISTENT_WRITE_LOCK)) {
     if (persistent.HasFlag(NvramSpace::kFlagWriteLocked)) {
-      NVRAM_LOG_INFO("Attempt to write persistently locked space 0x%x.",
+      NVRAM_LOG_INFO("Attempt to write persistently locked space 0x%" PRIx32
+                     ".",
                      transient->index);
       return NV_RESULT_OPERATION_DISABLED;
     }
   } else if (persistent.HasControl(NV_CONTROL_BOOT_WRITE_LOCK)) {
     if (transient->write_locked) {
-      NVRAM_LOG_INFO("Attempt to write per-boot locked space 0x%x.",
+      NVRAM_LOG_INFO("Attempt to write per-boot locked space 0x%" PRIx32 ".",
                      transient->index);
       return NV_RESULT_OPERATION_DISABLED;
     }
@@ -521,7 +523,7 @@ nvram_result_t NvramManager::SpaceRecord::CheckWriteAccess(
       !ConstantTimeEquals(persistent.authorization_value,
                           authorization_value)) {
     NVRAM_LOG_INFO(
-        "Authorization value mismatch for write access to space 0x%x.",
+        "Authorization value mismatch for write access to space 0x%" PRIx32 ".",
         transient->index);
     return NV_RESULT_ACCESS_DENIED;
   }
@@ -534,7 +536,7 @@ nvram_result_t NvramManager::SpaceRecord::CheckReadAccess(
     const Blob& authorization_value) {
   if (persistent.HasControl(NV_CONTROL_BOOT_READ_LOCK)) {
     if (transient->read_locked) {
-      NVRAM_LOG_INFO("Attempt to read per-boot locked space 0x%x.",
+      NVRAM_LOG_INFO("Attempt to read per-boot locked space 0x%" PRIx32 ".",
                      transient->index);
       return NV_RESULT_OPERATION_DISABLED;
     }
@@ -544,7 +546,7 @@ nvram_result_t NvramManager::SpaceRecord::CheckReadAccess(
       !ConstantTimeEquals(persistent.authorization_value,
                           authorization_value)) {
     NVRAM_LOG_INFO(
-        "Authorization value mismatch for read access to space 0x%x.",
+        "Authorization value mismatch for read access to space 0x%" PRIx32 ".",
         transient->index);
     return NV_RESULT_ACCESS_DENIED;
   }
@@ -570,7 +572,8 @@ bool NvramManager::Initialize() {
       return true;
     case storage::Status::kSuccess:
       if (header.version > NvramHeader::kVersion) {
-        NVRAM_LOG_ERR("Storage format %u is more recent than %u, aborting.",
+        NVRAM_LOG_ERR("Storage format %" PRIu32 " is more recent than %" PRIu32
+                      ", aborting.",
                       header.version, NvramHeader::kVersion);
         return false;
       }
@@ -591,7 +594,7 @@ bool NvramManager::Initialize() {
         //  * Failing noisily reduces the chances of bugs going undetected.
         //  * Keeping the index allocated prevents it from being accidentally
         //    clobbered due to appearing absent after transient storage errors.
-        NVRAM_LOG_ERR("Failed to load provisional space 0x%x.",
+        NVRAM_LOG_ERR("Failed to load provisional space 0x%" PRIx32 ".",
                       provisional_index.value());
         provisional_space_in_storage = true;
         break;
@@ -648,7 +651,7 @@ bool NvramManager::Initialize() {
   if (delete_provisional_space) {
     switch (persistence::DeleteSpace(provisional_index.value())) {
       case storage::Status::kStorageError:
-        NVRAM_LOG_ERR("Failed to delete provisional space 0x%x data.",
+        NVRAM_LOG_ERR("Failed to delete provisional space 0x%" PRIx32 " data.",
                       provisional_index.value());
         return false;
       case storage::Status::kNotFound:
@@ -697,12 +700,13 @@ bool NvramManager::LoadSpaceRecord(uint32_t index,
 
   switch (persistence::LoadSpace(index, &space_record->persistent)) {
     case storage::Status::kStorageError:
-      NVRAM_LOG_ERR("Failed to load space 0x%x data.", index);
+      NVRAM_LOG_ERR("Failed to load space 0x%" PRIx32 " data.", index);
       *result = NV_RESULT_INTERNAL_ERROR;
       return false;
     case storage::Status::kNotFound:
       // This should never happen if the header contains the index.
-      NVRAM_LOG_ERR("Space index 0x%x present in header, but data missing.",
+      NVRAM_LOG_ERR("Space index 0x%" PRIx32
+                    " present in header, but data missing.",
                     index);
       *result = NV_RESULT_INTERNAL_ERROR;
       return false;
@@ -743,7 +747,7 @@ nvram_result_t NvramManager::WriteHeader(Optional<uint32_t> provisional_index) {
 nvram_result_t NvramManager::WriteSpace(uint32_t index,
                                         const NvramSpace& space) {
   if (persistence::StoreSpace(index, space) != storage::Status::kSuccess) {
-    NVRAM_LOG_ERR("Failed to store space 0x%x.", index);
+    NVRAM_LOG_ERR("Failed to store space 0x%" PRIx32 ".", index);
     return NV_RESULT_INTERNAL_ERROR;
   }
 
