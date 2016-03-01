@@ -134,8 +134,7 @@ bool InputStreamBuffer::Advance() {
 
 NestedInputStreamBuffer::NestedInputStreamBuffer(InputStreamBuffer* delegate,
                                                  size_t size)
-    : InputStreamBuffer(delegate->pos_,
-                        min(delegate->end_, delegate->pos_ + size)),
+    : InputStreamBuffer(delegate->pos_, ClampEnd(delegate, size)),
       delegate_(delegate),
       remaining_(size) {}
 
@@ -147,8 +146,17 @@ bool NestedInputStreamBuffer::Advance() {
   }
   bool status = delegate_->Advance();
   pos_ = delegate_->pos_;
-  end_ = min(delegate_->end_, pos_ + remaining_);
+  end_ = ClampEnd(delegate_, remaining_);
   return status;
+}
+
+// static
+const uint8_t* NestedInputStreamBuffer::ClampEnd(InputStreamBuffer* delegate,
+                                                 size_t size) {
+  NVRAM_CHECK(delegate->pos_ <= delegate->end_);
+  return size < static_cast<size_t>(delegate->end_ - delegate->pos_)
+             ? delegate->pos_ + size
+             : delegate->end_;
 }
 
 OutputStreamBuffer::OutputStreamBuffer(void* data, size_t size)
@@ -223,7 +231,12 @@ bool BlobOutputStreamBuffer::Advance() {
 }
 
 bool BlobOutputStreamBuffer::Truncate() {
-  return blob_->Resize(pos_ - blob_->data());
+  if (!blob_->Resize(pos_ - blob_->data())) {
+    return false;
+  }
+  end_ = blob_->data() + blob_->size();
+  pos_ = end_;
+  return true;
 }
 
 ProtoReader::ProtoReader(InputStreamBuffer* stream_buffer)

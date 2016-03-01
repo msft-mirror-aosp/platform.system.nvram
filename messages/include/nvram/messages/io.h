@@ -89,6 +89,13 @@ class NVRAM_EXPORT NestedInputStreamBuffer : public InputStreamBuffer {
   // InputStreamBuffer:
   bool Advance() override;
 
+  // Determine the input window end based on |delegate|'s current window and the
+  // requested |size| to read. If |size| can be satisfied from |delegate|'s
+  // current window, return an end pointer within that window. If size is larger
+  // than the remaining bytes available in |delegate|'s input window, return
+  // |delegate|'s |end_| pointer.
+  static const uint8_t* ClampEnd(InputStreamBuffer* delegate, size_t size);
+
   InputStreamBuffer* delegate_;
   size_t remaining_;
 };

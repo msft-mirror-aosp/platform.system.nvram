@@ -19,6 +19,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 LOCAL_MODULE := libnvram-messages-tests
 LOCAL_SRC_FILES := \
+	io_test.cpp \
 	nvram_messages_test.cpp
 LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 LOCAL_CFLAGS := -Wall -Werror -Wextra
