@@ -23,10 +23,11 @@ LOCAL_SRC_FILES := \
 	io.cpp \
 	message_codec.cpp \
 	nvram_messages.cpp
-LOCAL_STATIC_LIBRARIES := libbase
 LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
+LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
+LOCAL_STATIC_LIBRARIES := libbase
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -36,10 +37,11 @@ LOCAL_SRC_FILES := \
 	io.cpp \
 	message_codec.cpp \
 	nvram_messages.cpp
-LOCAL_STATIC_LIBRARIES := libbase
 LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
+LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
+LOCAL_STATIC_LIBRARIES := libbase
 include $(BUILD_HOST_SHARED_LIBRARY)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))

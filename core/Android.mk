@@ -21,11 +21,12 @@ LOCAL_MODULE := libnvram-core
 LOCAL_SRC_FILES := \
 	nvram_manager.cpp \
 	persistence.cpp
-LOCAL_STATIC_LIBRARIES := libmincrypt
-LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
+LOCAL_STATIC_LIBRARIES := libmincrypt
+LOCAL_SHARED_LIBRARIES := libnvram-messages
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -33,11 +34,12 @@ LOCAL_MODULE := libnvram-core-host
 LOCAL_SRC_FILES := \
 	nvram_manager.cpp \
 	persistence.cpp
-LOCAL_STATIC_LIBRARIES := libmincrypt
-LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
+LOCAL_STATIC_LIBRARIES := libmincrypt
+LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))

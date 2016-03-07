@@ -21,6 +21,7 @@ LOCAL_MODULE := libnvram-messages-tests
 LOCAL_SRC_FILES := \
 	io_test.cpp \
 	nvram_messages_test.cpp
-LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CLANG := true
+LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 include $(BUILD_HOST_NATIVE_TEST)
