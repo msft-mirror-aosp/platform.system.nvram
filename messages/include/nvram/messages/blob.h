@@ -58,6 +58,10 @@ class NVRAM_EXPORT Blob {
   // retained. If |size| increases, new contents are unspecified. Returns true
   // on success, false if memory allocation fails. Blob size and contents remain
   // unchanged upon failure.
+  //
+  // Note that calling this function invalidates pointers to the memory block
+  // backing this |Blob|. You must call |data()| after |Resize()| returns to
+  // obtain fresh valid pointers.
   bool Resize(size_t size) NVRAM_WARN_UNUSED_RESULT;
 
  private:
