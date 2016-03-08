@@ -22,10 +22,11 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libnvram-hal
 LOCAL_SRC_FILES := \
 	nvram_device_adapter.cpp
-LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
+LOCAL_SHARED_LIBRARIES := libnvram-messages
 include $(BUILD_STATIC_LIBRARY)
 
 # nvram.testing is the software-only testing NVRAM HAL module.
@@ -36,8 +37,9 @@ LOCAL_SRC_FILES := \
 	memory_storage.cpp \
 	testing_module.c \
 	testing_nvram_implementation.cpp
+LOCAL_CLANG := true
+LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
 LOCAL_STATIC_LIBRARIES := libnvram-core libnvram-hal libmincrypt liblog
 LOCAL_SHARED_LIBRARIES := libnvram-messages
-LOCAL_CFLAGS := -Wall -Werror -Wextra -fvisibility=hidden
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)

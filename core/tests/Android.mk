@@ -22,6 +22,7 @@ LOCAL_SRC_FILES := \
 	fake_storage.cpp \
 	nvram_manager_test.cpp
 LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CLANG := true
 LOCAL_STATIC_LIBRARIES := libnvram-core-host libmincrypt
 LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 include $(BUILD_HOST_NATIVE_TEST)

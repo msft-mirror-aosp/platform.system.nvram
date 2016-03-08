@@ -20,6 +20,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := nvram-client
 LOCAL_SRC_FILES := \
 	nvram_client.c
-LOCAL_SHARED_LIBRARIES := libhardware libbase
 LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CLANG := true
+LOCAL_SHARED_LIBRARIES := libhardware libbase
 include $(BUILD_EXECUTABLE)
