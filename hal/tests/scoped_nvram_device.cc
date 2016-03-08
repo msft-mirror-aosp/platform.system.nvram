@@ -47,6 +47,12 @@ ScopedNvramDevice::ScopedNvramDevice() {
     device_ = nullptr;
     return;
   }
+  if (device_->common.version != NVRAM_DEVICE_API_VERSION_1_1) {
+    LOG(ERROR) << "Unsupported NVRAM HAL version.";
+    nvram_close(device_);
+    device_ = nullptr;
+    return;
+  }
 }
 
 ScopedNvramDevice::~ScopedNvramDevice() {
@@ -72,6 +78,14 @@ nvram_result_t ScopedNvramDevice::GetAvailableSizeInBytes(
     return NV_RESULT_INTERNAL_ERROR;
   }
   return device_->get_available_size_in_bytes(device_, available_size);
+}
+
+nvram_result_t ScopedNvramDevice::GetMaxSpaceSizeInBytes(
+    uint64_t* max_space_size) {
+  if (!device_) {
+    return NV_RESULT_INTERNAL_ERROR;
+  }
+  return device_->get_max_space_size_in_bytes(device_, max_space_size);
 }
 
 nvram_result_t ScopedNvramDevice::GetMaxSpaces(uint32_t* num_spaces) {

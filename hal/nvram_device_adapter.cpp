@@ -78,6 +78,16 @@ nvram_result_t device_get_available_size_in_bytes(const nvram_device_t* device,
   return result;
 }
 
+nvram_result_t device_get_max_space_size_in_bytes(const nvram_device_t* device,
+                                                  uint64_t* max_space_size) {
+  nvram::GetInfoRequest get_info_request;
+  nvram::GetInfoResponse get_info_response;
+  nvram_result_t result = Execute<nvram::COMMAND_GET_INFO>(
+      device, std::move(get_info_request), &get_info_response);
+  *max_space_size = get_info_response.max_space_size;
+  return result;
+}
+
 nvram_result_t device_get_max_spaces(const nvram_device_t* device,
                                      uint32_t* num_spaces) {
   nvram::GetInfoRequest get_info_request;
@@ -292,12 +302,13 @@ NvramDeviceAdapter::NvramDeviceAdapter(const hw_module_t* module,
   memset(&device_, 0, sizeof(nvram_device_t));
 
   device_.common.tag = HARDWARE_DEVICE_TAG;
-  device_.common.version = NVRAM_DEVICE_API_VERSION_0_1;
+  device_.common.version = NVRAM_DEVICE_API_VERSION_1_1;
   device_.common.module = const_cast<hw_module_t *>(module);
   device_.common.close = device_nvram_device_close;
 
   device_.get_total_size_in_bytes = device_get_total_size_in_bytes;
   device_.get_available_size_in_bytes = device_get_available_size_in_bytes;
+  device_.get_max_space_size_in_bytes = device_get_max_space_size_in_bytes;
   device_.get_max_spaces = device_get_max_spaces;
   device_.get_space_list = device_get_space_list;
   device_.get_space_size = device_get_space_size;

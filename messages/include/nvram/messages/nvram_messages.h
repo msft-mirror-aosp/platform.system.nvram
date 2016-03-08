@@ -45,6 +45,7 @@ struct GetInfoRequest {};
 struct GetInfoResponse {
   uint64_t total_size = 0;
   uint64_t available_size = 0;
+  uint64_t max_space_size = 0;
   uint32_t max_spaces = 0;
   Vector<uint32_t> space_list;
 };

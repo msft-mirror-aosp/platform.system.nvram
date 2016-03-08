@@ -54,6 +54,7 @@ TEST(NvramMessagesTest, GetInfoResponse) {
       response.payload.Activate<COMMAND_GET_INFO>();
   response_payload.total_size = 32768;
   response_payload.available_size = 4096;
+  response_payload.max_space_size = 512;
   response_payload.max_spaces = 32;
   ASSERT_TRUE(response_payload.space_list.Append(0x1234));
   ASSERT_TRUE(response_payload.space_list.Append(0xffffffff));
@@ -72,6 +73,7 @@ TEST(NvramMessagesTest, GetInfoResponse) {
 
   EXPECT_EQ(32768ULL, decoded_payload->total_size);
   EXPECT_EQ(4096ULL, decoded_payload->available_size);
+  EXPECT_EQ(512ULL, decoded_payload->max_space_size);
   EXPECT_EQ(32U, decoded_payload->max_spaces);
   ASSERT_EQ(5U, decoded_payload->space_list.size());
   EXPECT_EQ(0x1234U, decoded_payload->space_list[0]);

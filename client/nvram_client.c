@@ -123,6 +123,19 @@ static int HandleGetAvailableSize(nvram_device_t* device, char* args[]) {
   return 0;
 }
 
+static int HandleGetMaxSpaceSize(nvram_device_t* device, char* args[]) {
+  (void)args;
+  uint64_t max_space_size = 0;
+  nvram_result_t result =
+      device->get_max_space_size_in_bytes(device, &max_space_size);
+  if (result != NV_RESULT_SUCCESS) {
+    return result;
+  }
+
+  printf("%" PRIu64 "\n", max_space_size);
+  return 0;
+}
+
 static int HandleGetMaxSpaces(nvram_device_t* device, char* args[]) {
   (void)args;
   uint32_t max_spaces = 0;
@@ -337,6 +350,7 @@ struct CommandHandler {
 struct CommandHandler kCommandHandlers[] = {
     {"get_total_size", "", 0, &HandleGetTotalSize},
     {"get_available_size", "", 0, &HandleGetAvailableSize},
+    {"get_max_space_size", "", 0, &HandleGetMaxSpaceSize},
     {"get_max_spaces", "", 0, &HandleGetMaxSpaces},
     {"get_space_list", "", 0, &HandleGetSpaceList},
     {"get_space_size", "<index>", 1, &HandleGetSpaceSize},
@@ -387,6 +401,12 @@ int main(int argc, char* argv[]) {
       module->methods->open(module, NVRAM_HARDWARE_DEVICE_ID,
                             (hw_device_t**)&nvram_device) != 0) {
     fprintf(stderr, "Failed to open NVRAM HAL.\n");
+    return kStatusHALError;
+  }
+
+  if (nvram_device->common.version != NVRAM_DEVICE_API_VERSION_1_1) {
+    fprintf(stderr, "Unsupported NVRAM HAL version.\n");
+    nvram_device->common.close(&nvram_device->common);
     return kStatusHALError;
   }
 

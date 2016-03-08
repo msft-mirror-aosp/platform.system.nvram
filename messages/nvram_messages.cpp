@@ -23,6 +23,10 @@
 namespace nvram {
 
 // Descriptors for the message types.
+
+// IMPORTANT: The field numbers specified here correspond to protocol buffer
+// fields on the wire. While they are arbitrary, they should never be
+// reordered, reassigned, or overloaded once defined.
 template<> struct DescriptorForType<GetInfoRequest> {
   static constexpr auto kFields = MakeFieldList();
 };
@@ -32,7 +36,8 @@ template<> struct DescriptorForType<GetInfoResponse> {
       MakeFieldList(MakeField(1, &GetInfoResponse::total_size),
                     MakeField(2, &GetInfoResponse::available_size),
                     MakeField(3, &GetInfoResponse::max_spaces),
-                    MakeField(4, &GetInfoResponse::space_list));
+                    MakeField(4, &GetInfoResponse::space_list),
+                    MakeField(5, &GetInfoResponse::max_space_size));
 };
 
 template<> struct DescriptorForType<CreateSpaceRequest> {

@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016 The Android Open Source Project
+# Copyright (C) 2016 The Android Open-Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,14 +15,4 @@
 #
 
 LOCAL_PATH := $(call my-dir)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := libnvram-messages-tests
-LOCAL_MODULE_TAGS := debug
-LOCAL_SRC_FILES := \
-	io_test.cpp \
-	nvram_messages_test.cpp
-LOCAL_CFLAGS := -Wall -Werror -Wextra
-LOCAL_CLANG := true
-LOCAL_SHARED_LIBRARIES := libnvram-messages-host
-include $(BUILD_HOST_NATIVE_TEST)
+include $(call all-makefiles-under,$(LOCAL_PATH))

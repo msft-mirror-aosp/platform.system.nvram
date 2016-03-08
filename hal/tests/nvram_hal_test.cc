@@ -216,6 +216,16 @@ TEST(NVRAMModuleTest, AvailableSize) {
   EXPECT_LE(available_size, total_size);
 }
 
+TEST(NVRAMModuleTest, MaxSpaceSize) {
+  SafeScopedNvramDevice device;
+  uint64_t max_space_size = 0;
+  ASSERT_EQ(NV_RESULT_SUCCESS, device.GetMaxSpaceSizeInBytes(&max_space_size));
+  uint64_t total_size = 0;
+  ASSERT_EQ(NV_RESULT_SUCCESS, device.GetTotalSizeInBytes(&total_size));
+  EXPECT_LE(max_space_size, total_size);
+  EXPECT_GE(max_space_size, 32u);
+}
+
 TEST(NVRAMModuleTest, MaxSpaces) {
   SafeScopedNvramDevice device;
   uint32_t num_spaces = 0;
@@ -252,12 +262,12 @@ TEST(NVRAMModuleTest, SpaceList) {
 TEST(NVRAMModuleTest, SpaceSize) {
   SafeScopedNvramDevice device;
   ScopedNvramSpace space(&device, kTestIndex1, 17);
-  ScopedNvramSpace space2(&device, kTestIndex2, 1024);
+  ScopedNvramSpace space2(&device, kTestIndex2, 32);
   uint64_t size = 0;
   ASSERT_EQ(NV_RESULT_SUCCESS, device.GetSpaceSize(kTestIndex1, &size));
   EXPECT_EQ(17u, size);
   ASSERT_EQ(NV_RESULT_SUCCESS, device.GetSpaceSize(kTestIndex2, &size));
-  EXPECT_EQ(1024u, size);
+  EXPECT_EQ(32u, size);
   EXPECT_EQ(NV_RESULT_SPACE_DOES_NOT_EXIST,
             device.GetSpaceSize(kTestIndexNeverExists, &size));
 }
@@ -301,7 +311,12 @@ TEST(NVRAMModuleTest, CreateSmall) {
 
 TEST(NVRAMModuleTest, CreateLarge) {
   SafeScopedNvramDevice device;
-  ScopedNvramSpace space(&device, kTestIndex1, 256);
+  uint64_t max_space_size = 0;
+  ASSERT_EQ(NV_RESULT_SUCCESS, device.GetMaxSpaceSizeInBytes(&max_space_size));
+  uint64_t available_size = 0;
+  ASSERT_EQ(NV_RESULT_SUCCESS, device.GetAvailableSizeInBytes(&available_size));
+  ScopedNvramSpace space(&device, kTestIndex1,
+                         std::min(max_space_size, available_size));
 }
 
 TEST(NVRAMModuleTest, CreateWithCustomControls) {
@@ -489,9 +504,10 @@ TEST(NVRAMModuleTest, WriteExtend) {
 TEST(NVRAMModuleTest, WriteExtendTooShort) {
   uint32_t index = kTestIndex1;
   SafeScopedNvramDevice device;
+    // Only SHA-256 is supported. Try 20 which is SHA-1 output.
   EXPECT_EQ(
       NV_RESULT_INVALID_PARAMETER,
-      device.CreateSpace(index, 16, {NV_CONTROL_WRITE_EXTEND}, kNoAuth));
+      device.CreateSpace(index, 20, {NV_CONTROL_WRITE_EXTEND}, kNoAuth));
   EXPECT_EQ(NV_RESULT_SPACE_DOES_NOT_EXIST,
             device.WriteSpace(index, "test", kNoAuth));
 }
@@ -499,11 +515,16 @@ TEST(NVRAMModuleTest, WriteExtendTooShort) {
 TEST(NVRAMModuleTest, WriteExtendTooLong) {
   uint32_t index = kTestIndex1;
   SafeScopedNvramDevice device;
-  EXPECT_EQ(
-      NV_RESULT_INVALID_PARAMETER,
-      device.CreateSpace(index, 64, {NV_CONTROL_WRITE_EXTEND}, kNoAuth));
-  EXPECT_EQ(NV_RESULT_SPACE_DOES_NOT_EXIST,
-            device.WriteSpace(index, "test", kNoAuth));
+  uint64_t max_space_size = 0;
+  ASSERT_EQ(NV_RESULT_SUCCESS, device.GetMaxSpaceSizeInBytes(&max_space_size));
+  if (max_space_size > 32) {
+    // Only SHA-256 is supported. Try 64 which is SHA-512 output.
+    EXPECT_EQ(NV_RESULT_INVALID_PARAMETER,
+              device.CreateSpace(index, std::min<uint64_t>(max_space_size, 64),
+                                 {NV_CONTROL_WRITE_EXTEND}, kNoAuth));
+    EXPECT_EQ(NV_RESULT_SPACE_DOES_NOT_EXIST,
+              device.WriteSpace(index, "test", kNoAuth));
+  }
 }
 
 TEST(NVRAMModuleTest, InitialValue) {

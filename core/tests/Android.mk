@@ -18,6 +18,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libnvram-core-tests
+LOCAL_MODULE_TAGS := debug
 LOCAL_SRC_FILES := \
 	fake_storage.cpp \
 	nvram_manager_test.cpp

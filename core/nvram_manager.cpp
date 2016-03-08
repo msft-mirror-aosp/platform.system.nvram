@@ -150,6 +150,7 @@ nvram_result_t NvramManager::GetInfo(const GetInfoRequest& /* request */,
   // layer.
   response->total_size = kMaxSpaceSize * kMaxSpaces;
   response->available_size = kMaxSpaceSize * (kMaxSpaces - num_spaces_);
+  response->max_space_size = kMaxSpaceSize;
   response->max_spaces = kMaxSpaces;
   Vector<uint32_t>& space_list = response->space_list;
   if (!space_list.Resize(num_spaces_)) {

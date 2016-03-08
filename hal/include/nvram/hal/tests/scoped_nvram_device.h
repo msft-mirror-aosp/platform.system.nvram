@@ -42,6 +42,7 @@ class ScopedNvramDevice {
   // Convenience methods which trivially wrap the device functions.
   virtual nvram_result_t GetTotalSizeInBytes(uint64_t* total_size);
   virtual nvram_result_t GetAvailableSizeInBytes(uint64_t* available_size);
+  virtual nvram_result_t GetMaxSpaceSizeInBytes(uint64_t* max_space_size);
   virtual nvram_result_t GetMaxSpaces(uint32_t* num_spaces);
   virtual nvram_result_t GetSpaceList(std::vector<uint32_t>* space_index_list);
   virtual nvram_result_t GetSpaceSize(uint32_t index, uint64_t* size);

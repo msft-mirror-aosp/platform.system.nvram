@@ -35,10 +35,38 @@ class TestingNvramImplementation : public nvram::NvramImplementation {
 
   void Execute(const nvram::Request& request,
                nvram::Response* response) override {
-    nvram_manager_.Dispatch(request, response);
+    nvram::Blob request_blob;
+    if (!nvram::Encode(request, &request_blob)) {
+      response->result = NV_RESULT_INVALID_PARAMETER;
+      return;
+    }
+    nvram::Blob response_blob;
+    if (!ExecuteEncoded(request_blob, &response_blob)) {
+      response->result = NV_RESULT_INTERNAL_ERROR;
+      return;
+    }
+    if (!nvram::Decode(response_blob.data(), response_blob.size(), response)) {
+      response->result = NV_RESULT_INTERNAL_ERROR;
+      return;
+    }
   }
 
  private:
+  // Mixing encoding into the Execute flow emulates scenarios where requests are
+  // sent to another component for processing.
+  bool ExecuteEncoded(const nvram::Blob& request_blob,
+                      nvram::Blob* response_blob) {
+    nvram::Request request;
+    if (!nvram::Decode(request_blob.data(), request_blob.size(), &request)) {
+      return false;
+    }
+    nvram::Response response;
+    nvram_manager_.Dispatch(request, &response);
+    if (!nvram::Encode(response, response_blob)) {
+      return false;
+    }
+    return true;
+  }
   nvram::NvramManager nvram_manager_;
 };
 
