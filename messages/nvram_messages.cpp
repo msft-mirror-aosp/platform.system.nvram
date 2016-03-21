@@ -159,6 +159,16 @@ bool Encode(const Message& msg, Blob* blob) {
 }
 
 template <typename Message>
+bool Encode(const Message& msg, void* buffer, size_t* size) {
+  ArrayOutputStreamBuffer stream(buffer, *size);
+  if (!nvram::proto::Encode(msg, &stream)) {
+    return false;
+  }
+  *size = stream.bytes_written();
+  return true;
+}
+
+template <typename Message>
 bool Decode(const uint8_t* data, size_t size, Message* msg) {
   InputStreamBuffer stream(data, size);
   return nvram::proto::Decode(msg, &stream) && stream.Done();
@@ -166,9 +176,11 @@ bool Decode(const uint8_t* data, size_t size, Message* msg) {
 
 // Instantiate the templates for the |Request| and |Response| message types.
 template NVRAM_EXPORT bool Encode<Request>(const Request&, Blob*);
+template NVRAM_EXPORT bool Encode<Request>(const Request&, void*, size_t*);
 template NVRAM_EXPORT bool Decode<Request>(const uint8_t*, size_t, Request*);
 
 template NVRAM_EXPORT bool Encode<Response>(const Response&, Blob*);
+template NVRAM_EXPORT bool Encode<Response>(const Response&, void*, size_t*);
 template NVRAM_EXPORT bool Decode<Response>(const uint8_t*, size_t, Response*);
 
 }  // namespace nvram

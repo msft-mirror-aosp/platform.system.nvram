@@ -44,4 +44,30 @@ LOCAL_SHARED_LIBRARIES := libnvram-messages
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_SHARED_LIBRARY)
 
+# fake_nvram is a system daemon that provides a software-only access-controlled
+# NVRAM implementation. This is only for illustration and in order to get code
+# using access-controlled NVRAM running on emulators. It *DOES NOT* meet the
+# tamper evidence requirements, so can't be used on production devices.
+include $(CLEAR_VARS)
+LOCAL_MODULE := fake-nvram
+LOCAL_SRC_FILES := \
+	fake_nvram.cpp \
+	fake_nvram_storage.cpp
+LOCAL_CLANG := true
+LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_STATIC_LIBRARIES := libnvram-core libmincrypt
+LOCAL_SHARED_LIBRARIES := libnvram-messages libminijail libcutils libbase
+LOCAL_INIT_RC := fake-nvram.rc
+LOCAL_REQUIRED_MODULES := fake-nvram-seccomp.policy
+LOCAL_MODULE_TAGS := optional
+include $(BUILD_EXECUTABLE)
+
+# seccomp policy for fake_nvram.
+include $(CLEAR_VARS)
+LOCAL_MODULE := fake-nvram-seccomp.policy
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(TARGET_OUT)/usr/share/policy/
+LOCAL_SRC_FILES := fake-nvram-seccomp-$(TARGET_ARCH).policy
+include $(BUILD_PREBUILT)
+
 include $(call all-makefiles-under,$(LOCAL_PATH))

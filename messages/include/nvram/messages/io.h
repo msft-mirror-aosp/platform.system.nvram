@@ -144,6 +144,23 @@ class NVRAM_EXPORT OutputStreamBuffer {
   uint8_t* end_ = nullptr;
 };
 
+// An |OutputStreamBuffer| backed by a single data buffer.
+class NVRAM_EXPORT ArrayOutputStreamBuffer : public OutputStreamBuffer {
+ public:
+  ArrayOutputStreamBuffer() = default;
+  ArrayOutputStreamBuffer(void* data, size_t size)
+      : OutputStreamBuffer(data, size), data_(pos_) {}
+  ArrayOutputStreamBuffer(void* data, void* end)
+      : OutputStreamBuffer(data, end), data_(pos_) {}
+  ~ArrayOutputStreamBuffer() override = default;
+
+  // Returns the number of bytes already written.
+  size_t bytes_written() const { return pos_ - data_; }
+
+ private:
+  uint8_t* data_ = nullptr;
+};
+
 // An |OutputStream| implementation that doesn't write anything, but just counts
 // the number of bytes written.
 class NVRAM_EXPORT CountingOutputStreamBuffer : public OutputStreamBuffer {

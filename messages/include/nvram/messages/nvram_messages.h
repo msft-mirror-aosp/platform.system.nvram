@@ -162,6 +162,11 @@ struct Response {
 template <typename Message>
 bool Encode(const Message& msg, Blob* blob);
 
+// Encode |msg| to |buffer|, which is of size |*size|. Updates |*size| to
+// indicate the number of bytes written. Returns true on success.
+template <typename Message>
+bool Encode(const Message& msg, void* buffer, size_t* size);
+
 // Decode |msg| from the |data| buffer, which contains |size| bytes. Returns
 // true if successful.
 template <typename Message>
