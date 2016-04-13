@@ -25,7 +25,7 @@ LOCAL_CFLAGS := -Wall -Werror -Wextra
 LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
-LOCAL_STATIC_LIBRARIES := libmincrypt
+LOCAL_STATIC_LIBRARIES := libconstrainedcrypto
 LOCAL_SHARED_LIBRARIES := libnvram-messages
 include $(BUILD_STATIC_LIBRARY)
 
@@ -38,7 +38,7 @@ LOCAL_CFLAGS := -Wall -Werror -Wextra
 LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
-LOCAL_STATIC_LIBRARIES := libmincrypt
+LOCAL_STATIC_LIBRARIES := libconstrainedcrypto
 LOCAL_SHARED_LIBRARIES := libnvram-messages-host
 include $(BUILD_HOST_STATIC_LIBRARY)
 
