@@ -21,7 +21,7 @@ extern "C" {
 #include <string.h>
 }  // extern "C"
 
-#include <mincrypt/sha256.h>
+#include <constrainedcrypto/sha256.h>
 #include <nvram/core/logger.h>
 
 using namespace nvram::storage;
