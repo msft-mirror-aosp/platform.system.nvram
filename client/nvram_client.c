@@ -22,7 +22,7 @@
 
 #include <hardware/nvram.h>
 
-#define countof(array) (sizeof(array) / sizeof(array[0]))
+#define countof(array) (sizeof(array) / sizeof((array)[0]))
 
 // Exit status codes. These are all negative as the positive ones are used for
 // the NV_RESULT_ codes.
