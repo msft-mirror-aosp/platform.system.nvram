@@ -55,8 +55,13 @@ LOCAL_SRC_FILES := \
 	fake_nvram_storage.cpp
 LOCAL_CLANG := true
 LOCAL_CFLAGS := -Wall -Werror -Wextra
-LOCAL_STATIC_LIBRARIES := libnvram-core libconstrainedcrypto
-LOCAL_SHARED_LIBRARIES := libnvram-messages libminijail libcutils libbase
+LOCAL_STATIC_LIBRARIES := libnvram-core
+LOCAL_SHARED_LIBRARIES := \
+	libnvram-messages \
+	libcrypto \
+	libminijail \
+	libcutils \
+	libbase
 LOCAL_INIT_RC := fake-nvram.rc
 LOCAL_REQUIRED_MODULES := fake-nvram-seccomp.policy
 LOCAL_MODULE_TAGS := optional
