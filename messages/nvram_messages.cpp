@@ -37,7 +37,8 @@ template<> struct DescriptorForType<GetInfoResponse> {
                     MakeField(2, &GetInfoResponse::available_size),
                     MakeField(3, &GetInfoResponse::max_spaces),
                     MakeField(4, &GetInfoResponse::space_list),
-                    MakeField(5, &GetInfoResponse::max_space_size));
+                    MakeField(5, &GetInfoResponse::max_space_size),
+                    MakeField(6, &GetInfoResponse::wipe_disabled));
 };
 
 template<> struct DescriptorForType<CreateSpaceRequest> {
@@ -125,6 +126,22 @@ template<> struct DescriptorForType<LockSpaceReadResponse> {
   static constexpr auto kFields = MakeFieldList();
 };
 
+template<> struct DescriptorForType<WipeStorageRequest> {
+  static constexpr auto kFields = MakeFieldList();
+};
+
+template<> struct DescriptorForType<WipeStorageResponse> {
+  static constexpr auto kFields = MakeFieldList();
+};
+
+template<> struct DescriptorForType<DisableWipeRequest> {
+  static constexpr auto kFields = MakeFieldList();
+};
+
+template<> struct DescriptorForType<DisableWipeResponse> {
+  static constexpr auto kFields = MakeFieldList();
+};
+
 template<> struct DescriptorForType<Request> {
   static constexpr auto kFields = MakeFieldList(
       MakeOneOfField(1, &Request::payload, COMMAND_GET_INFO),
@@ -135,7 +152,9 @@ template<> struct DescriptorForType<Request> {
       MakeOneOfField(6, &Request::payload, COMMAND_WRITE_SPACE),
       MakeOneOfField(7, &Request::payload, COMMAND_READ_SPACE),
       MakeOneOfField(8, &Request::payload, COMMAND_LOCK_SPACE_WRITE),
-      MakeOneOfField(9, &Request::payload, COMMAND_LOCK_SPACE_READ));
+      MakeOneOfField(9, &Request::payload, COMMAND_LOCK_SPACE_READ),
+      MakeOneOfField(10, &Request::payload, COMMAND_WIPE_STORAGE),
+      MakeOneOfField(11, &Request::payload, COMMAND_DISABLE_WIPE));
 };
 
 template<> struct DescriptorForType<Response> {
@@ -149,7 +168,9 @@ template<> struct DescriptorForType<Response> {
       MakeOneOfField(7, &Response::payload, COMMAND_WRITE_SPACE),
       MakeOneOfField(8, &Response::payload, COMMAND_READ_SPACE),
       MakeOneOfField(9, &Response::payload, COMMAND_LOCK_SPACE_WRITE),
-      MakeOneOfField(10, &Response::payload, COMMAND_LOCK_SPACE_READ));
+      MakeOneOfField(10, &Response::payload, COMMAND_LOCK_SPACE_READ),
+      MakeOneOfField(11, &Response::payload, COMMAND_WIPE_STORAGE),
+      MakeOneOfField(12, &Response::payload, COMMAND_DISABLE_WIPE));
 };
 
 template <typename Message>
