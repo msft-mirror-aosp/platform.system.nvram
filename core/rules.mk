@@ -22,12 +22,14 @@ LOCAL_DIR := $(GET_LOCAL_DIR)
 MODULE := $(LOCAL_DIR)
 
 MODULE_SRCS += \
+	$(LOCAL_DIR)/crypto_boringssl.cpp \
 	$(LOCAL_DIR)/nvram_manager.cpp \
 	$(LOCAL_DIR)/persistence.cpp
 
 MODULE_CPPFLAGS := -Wall -Werror -Wextra -std=c++11
 
 MODULE_DEPS += \
+	external/openssl \
 	lib/libc-trusty \
 	lib/libstdc++-trusty \
 	system/nvram/messages
