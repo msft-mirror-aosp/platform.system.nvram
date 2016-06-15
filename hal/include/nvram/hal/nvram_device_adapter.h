@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef NVRAM_HAL_NVRAM_DEVICE_ADAPTER_H_
+#define NVRAM_HAL_NVRAM_DEVICE_ADAPTER_H_
+
 #include <UniquePtr.h>
 
 #include <hardware/nvram.h>
@@ -60,3 +63,5 @@ static_assert(std::is_standard_layout<NvramDeviceAdapter>::value,
               "NvramDeviceAdapater must be a standard layout type.");
 
 }  // namespace nvram
+
+#endif  // NVRAM_HAL_NVRAM_DEVICE_ADAPTER_H_
