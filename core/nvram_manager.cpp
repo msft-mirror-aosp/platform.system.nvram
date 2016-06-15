@@ -135,6 +135,14 @@ void NvramManager::Dispatch(const nvram::Request& request,
       result = LockSpaceRead(*input.get<COMMAND_LOCK_SPACE_READ>(),
                              &output->Activate<COMMAND_LOCK_SPACE_READ>());
       break;
+    case nvram::COMMAND_WIPE_STORAGE:
+      result = WipeStorage(*input.get<COMMAND_WIPE_STORAGE>(),
+                           &output->Activate<COMMAND_WIPE_STORAGE>());
+      break;
+    case nvram::COMMAND_DISABLE_WIPE:
+      result = DisableWipe(*input.get<COMMAND_DISABLE_WIPE>(),
+                           &output->Activate<COMMAND_DISABLE_WIPE>());
+      break;
   }
 
   response->result = result;
@@ -161,6 +169,7 @@ nvram_result_t NvramManager::GetInfo(const GetInfoRequest& /* request */,
   for (size_t i = 0; i < num_spaces_; ++i) {
     space_list[i] = spaces_[i].index;
   }
+  response->wipe_disabled = disable_wipe_;
 
   return NV_RESULT_SUCCESS;
 }
@@ -499,6 +508,76 @@ nvram_result_t NvramManager::LockSpaceRead(
 
   NVRAM_LOG_ERR("Space not configured for read locking.");
   return NV_RESULT_INVALID_PARAMETER;
+}
+
+nvram_result_t NvramManager::WipeStorage(
+    const WipeStorageRequest& /* request */,
+    WipeStorageResponse* /* response */) {
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+#ifdef NVRAM_WIPE_STORAGE_SUPPORT
+  if (disable_wipe_) {
+    return NV_RESULT_OPERATION_DISABLED;
+  }
+
+  // Go through all spaces and wipe the corresponding data. Note that the header
+  // is only updated once all space data is gone. This will "break" all spaces
+  // that are left declared but don't have data. This situation can be observed
+  // if we crash somewhere during the wiping process before clearing the header.
+  //
+  // Note that we deliberately choose this wiping sequence so we can never end
+  // up in a state where the header appears clean but existing space data
+  // remains.
+  //
+  // As a final note, the ideal solution would be to atomically clear the header
+  // and delete all space data. While more desirable from an operational point
+  // of view, this would drastically complicate storage layer requirements to
+  // support cross-object atomicity instead of per-object atomicity.
+  for (size_t i = 0; i < num_spaces_; ++i) {
+    const uint32_t index = spaces_[i].index;
+    switch (persistence::DeleteSpace(index)) {
+      case storage::Status::kStorageError:
+        NVRAM_LOG_ERR("Failed to wipe space 0x%" PRIx32 " data.", index);
+        return NV_RESULT_INTERNAL_ERROR;
+      case storage::Status::kNotFound:
+        // The space was missing even if it shouldn't have been. This may occur
+        // if a previous wiping attempt was aborted half-way. Log an error, but
+        // return success as we're in the desired state.
+        NVRAM_LOG_WARN("Space 0x%" PRIx32 " data missing on wipe.", index);
+        break;
+      case storage::Status::kSuccess:
+        break;
+    }
+  }
+
+  // All spaces are gone, clear the header.
+  num_spaces_ = 0;
+  return WriteHeader(Optional<uint32_t>());
+#else  // NVRAM_WIPE_STORAGE_SUPPORT
+  // We're not accessing the flag member, so prevent a compiler warning. The
+  // alternative of conditionally including the member in the class declaration
+  // looks cleaner at first sight, but comes with the risk of
+  // NVRAM_WIPE_STORAGE_SUPPORT polarity mismatches between compilation units,
+  // which is more subtly dangerous, so we rather keep the member even for the
+  // case in which it is not used.
+  (void)disable_wipe_;
+  return NV_RESULT_OPERATION_DISABLED;
+#endif  // NVRAM_WIPE_STORAGE_SUPPORT
+}
+
+nvram_result_t NvramManager::DisableWipe(
+    const DisableWipeRequest& /* request */,
+    DisableWipeResponse* /* response */) {
+  if (!Initialize())
+    return NV_RESULT_INTERNAL_ERROR;
+
+#ifdef NVRAM_WIPE_STORAGE_SUPPORT
+  disable_wipe_ = true;
+  return NV_RESULT_SUCCESS;
+#else  // NVRAM_WIPE_STORAGE_SUPPORT
+  return NV_RESULT_OPERATION_DISABLED;
+#endif  // NVRAM_WIPE_STORAGE_SUPPORT
 }
 
 nvram_result_t NvramManager::SpaceRecord::CheckWriteAccess(

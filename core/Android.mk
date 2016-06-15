@@ -35,7 +35,7 @@ LOCAL_SRC_FILES := \
 	crypto_boringssl.cpp \
 	nvram_manager.cpp \
 	persistence.cpp
-LOCAL_CFLAGS := -Wall -Werror -Wextra
+LOCAL_CFLAGS := -Wall -Werror -Wextra -DNVRAM_WIPE_STORAGE_SUPPORT
 LOCAL_CLANG := true
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include

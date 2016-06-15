@@ -1106,5 +1106,126 @@ TEST_F(NvramManagerTest, LockSpaceRead_NotLockable) {
       nvram.LockSpaceRead(lock_space_read_request, &lock_space_read_response));
 }
 
+TEST_F(NvramManagerTest, WipeStorage_Success) {
+  // Set up an NVRAM space.
+  NvramSpace space;
+  ASSERT_TRUE(space.contents.Resize(10));
+  ASSERT_EQ(storage::Status::kSuccess, persistence::StoreSpace(17, space));
+  SetupHeader(NvramHeader::kVersion, 17);
+
+  // Check that the space is visible.
+  NvramManager nvram;
+  GetSpaceInfoRequest get_space_info_request;
+  get_space_info_request.index = 17;
+  GetSpaceInfoResponse get_space_info_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS, nvram.GetSpaceInfo(get_space_info_request,
+                                                  &get_space_info_response));
+  EXPECT_EQ(10U, get_space_info_response.size);
+
+  // Request a wipe.
+  WipeStorageRequest wipe_storage_request;
+  WipeStorageResponse wipe_storage_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram.WipeStorage(wipe_storage_request, &wipe_storage_response));
+
+  // The space should no longer be declared.
+  GetInfoRequest get_info_request;
+  GetInfoResponse get_info_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram.GetInfo(get_info_request, &get_info_response));
+  EXPECT_EQ(0U, get_info_response.space_list.size());
+
+  // Accessing the space should fail.
+  EXPECT_EQ(
+      NV_RESULT_SPACE_DOES_NOT_EXIST,
+      nvram.GetSpaceInfo(get_space_info_request, &get_space_info_response));
+}
+
+TEST_F(NvramManagerTest, WipeStorage_Abort) {
+  // Set up two pre-existing spaces and a matching header.
+  NvramSpace space;
+  ASSERT_TRUE(space.contents.Resize(10));
+  ASSERT_EQ(storage::Status::kSuccess, persistence::StoreSpace(1, space));
+  ASSERT_TRUE(space.contents.Resize(20));
+  ASSERT_EQ(storage::Status::kSuccess, persistence::StoreSpace(2, space));
+  NvramHeader header;
+  header.version = NvramHeader::kVersion;
+  ASSERT_TRUE(header.allocated_indices.Resize(2));
+  header.allocated_indices[0] = 1;
+  header.allocated_indices[1] = 2;
+  ASSERT_EQ(storage::Status::kSuccess, persistence::StoreHeader(header));
+
+  // Check that the spaces are visible.
+  NvramManager nvram;
+  GetInfoRequest get_info_request;
+  GetInfoResponse get_info_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram.GetInfo(get_info_request, &get_info_response));
+  EXPECT_EQ(2U, get_info_response.space_list.size());
+  int space_mask = 0;
+  for (size_t i = 0; i < get_info_response.space_list.size(); ++i) {
+    space_mask |= (1 << get_info_response.space_list[i]);
+  }
+  EXPECT_EQ(0x6, space_mask);
+
+  // Set things up so the deletion request for the second space fails.
+  storage::SetSpaceWriteError(2, true);
+
+  // The wipe request should fail now.
+  WipeStorageRequest wipe_storage_request;
+  WipeStorageResponse wipe_storage_response;
+  EXPECT_EQ(NV_RESULT_INTERNAL_ERROR,
+            nvram.WipeStorage(wipe_storage_request, &wipe_storage_response));
+
+  // New wipe attempt with a fresh instance after clearing the error.
+  storage::SetSpaceWriteError(2, false);
+  NvramManager nvram2;
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram2.WipeStorage(wipe_storage_request, &wipe_storage_response));
+
+  // No spaces should remain.
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram2.GetInfo(get_info_request, &get_info_response));
+  EXPECT_EQ(0U, get_info_response.space_list.size());
+}
+
+TEST_F(NvramManagerTest, WipeStorage_Disable) {
+  // Set up an NVRAM space.
+  NvramSpace space;
+  ASSERT_TRUE(space.contents.Resize(10));
+  ASSERT_EQ(storage::Status::kSuccess, persistence::StoreSpace(17, space));
+  SetupHeader(NvramHeader::kVersion, 17);
+
+  NvramManager nvram;
+
+  // Disable wiping.
+  DisableWipeRequest disable_wipe_request;
+  DisableWipeResponse disable_wipe_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram.DisableWipe(disable_wipe_request, &disable_wipe_response));
+
+  // A wipe request should fail.
+  WipeStorageRequest wipe_storage_request;
+  WipeStorageResponse wipe_storage_response;
+  EXPECT_EQ(NV_RESULT_OPERATION_DISABLED,
+            nvram.WipeStorage(wipe_storage_request, &wipe_storage_response));
+
+  // The space should remain declared.
+  GetInfoRequest get_info_request;
+  GetInfoResponse get_info_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS,
+            nvram.GetInfo(get_info_request, &get_info_response));
+  ASSERT_EQ(1U, get_info_response.space_list.size());
+  EXPECT_EQ(17U, get_info_response.space_list[0]);
+
+  // The space data should remain present.
+  GetSpaceInfoRequest get_space_info_request;
+  get_space_info_request.index = 17;
+  GetSpaceInfoResponse get_space_info_response;
+  EXPECT_EQ(NV_RESULT_SUCCESS, nvram.GetSpaceInfo(get_space_info_request,
+                                                  &get_space_info_response));
+  EXPECT_EQ(10U, get_space_info_response.size);
+}
+
 }  // namespace
 }  // namespace nvram
