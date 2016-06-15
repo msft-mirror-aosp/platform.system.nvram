@@ -56,6 +56,33 @@ class NvramManager {
   nvram_result_t LockSpaceRead(const LockSpaceReadRequest& request,
                                LockSpaceReadResponse* response);
 
+  // The wipe functions are meant for use by firmware after determining the
+  // device's mode of operation. These can be used to clear access-controlled
+  // NVRAM when a user invokes a full hardware reset. Note that in regular
+  // operation, the user *MUST BE PREVENTED* from wiping access-controlled
+  // NVRAM.
+  //
+  // If a full hardware reset can conveniently clear the access-controlled NVRAM
+  // storage area out of band, it's fine to do so. In this case, the
+  // wiping-related commands should not be exposed at all. Note that this is the
+  // default behavior - the reference implementation will ignore all wipe
+  // requests unless compiled with NVRAM_WIPE_STORAGE_SUPPORT=1.
+  //
+  // For devices where firmware doesn't have direct control over the storage
+  // area used by access-controlled NVRAM, the wiping commands are provided to
+  // facilitate clearing storage:
+  //   1. Determine boot mode.
+  //   2. If not in recovery mode, call DisableWipe(). All further wipe requests
+  //      will be rejected. A reboot (or TEE restart for that matter) is
+  //      required before a new decision can be made.
+  //   3. If operating in recovery mode, forgo calling DisableWipe(). The
+  //      recovery process will then be able to invoke WipeStorage() later as
+  //      needed.
+  nvram_result_t WipeStorage(const WipeStorageRequest& request,
+                             WipeStorageResponse* response);
+  nvram_result_t DisableWipe(const DisableWipeRequest& request,
+                             DisableWipeResponse* response);
+
  private:
   // Holds transient state corresponding to an allocated NVRAM space, i.e. meta
   // data valid for a single boot. One instance of this struct is kept in memory
@@ -116,6 +143,7 @@ class NvramManager {
 
   bool initialized_ = false;
   bool disable_create_ = false;
+  bool disable_wipe_ = false;
 
   // Bookkeeping information for allocated spaces.
   size_t num_spaces_ = 0;
