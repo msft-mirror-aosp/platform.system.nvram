@@ -88,6 +88,21 @@ const Type& min(const Type& a, const Type& b) {
   return (a < b) ? a : b;
 }
 
+// Filter status codes from the storage layer to only include known values.
+// Anything outside the range will be mapped to the generic |kStorageError|.
+storage::Status SanitizeStorageStatus(storage::Status status) {
+  switch (status) {
+    case storage::Status::kSuccess:
+      return storage::Status::kSuccess;
+    case storage::Status::kNotFound:
+      return storage::Status::kNotFound;
+    case storage::Status::kStorageError:
+      return storage::Status::kStorageError;
+  }
+  NVRAM_LOG_ERR("Unknown status code %u!", status);
+  return storage::Status::kStorageError;
+}
+
 }  // namespace
 
 // Looks at |request| to determine the command to execute, then invokes
@@ -333,7 +348,7 @@ nvram_result_t NvramManager::DeleteSpace(const DeleteSpaceRequest& request,
   --num_spaces_;
   result = WriteHeader(Optional<uint32_t>(index));
   if (result == NV_RESULT_SUCCESS) {
-    switch (persistence::DeleteSpace(index)) {
+    switch (SanitizeStorageStatus(persistence::DeleteSpace(index))) {
       case storage::Status::kStorageError:
         NVRAM_LOG_ERR("Failed to delete space 0x%" PRIx32 " data.", index);
         result = NV_RESULT_INTERNAL_ERROR;
@@ -536,7 +551,7 @@ nvram_result_t NvramManager::WipeStorage(
   // support cross-object atomicity instead of per-object atomicity.
   for (size_t i = 0; i < num_spaces_; ++i) {
     const uint32_t index = spaces_[i].index;
-    switch (persistence::DeleteSpace(index)) {
+    switch (SanitizeStorageStatus(persistence::DeleteSpace(index))) {
       case storage::Status::kStorageError:
         NVRAM_LOG_ERR("Failed to wipe space 0x%" PRIx32 " data.", index);
         return NV_RESULT_INTERNAL_ERROR;
@@ -638,7 +653,7 @@ bool NvramManager::Initialize() {
     return true;
 
   NvramHeader header;
-  switch (persistence::LoadHeader(&header)) {
+  switch (SanitizeStorageStatus(persistence::LoadHeader(&header))) {
     case storage::Status::kStorageError:
       NVRAM_LOG_ERR("Init failed to load header.");
       return false;
@@ -663,7 +678,8 @@ bool NvramManager::Initialize() {
   bool provisional_space_in_storage = false;
   if (provisional_index.valid()) {
     NvramSpace space;
-    switch (persistence::LoadSpace(provisional_index.value(), &space)) {
+    switch (SanitizeStorageStatus(
+        persistence::LoadSpace(provisional_index.value(), &space))) {
       case storage::Status::kStorageError:
         // Log an error but leave the space marked as allocated. This will allow
         // initialization to complete, so other spaces can be accessed.
@@ -727,7 +743,8 @@ bool NvramManager::Initialize() {
   // in |header.allocated_indices|, it refers to half-deleted space. Destroy the
   // space in that case.
   if (delete_provisional_space) {
-    switch (persistence::DeleteSpace(provisional_index.value())) {
+    switch (SanitizeStorageStatus(
+        persistence::DeleteSpace(provisional_index.value()))) {
       case storage::Status::kStorageError:
         NVRAM_LOG_ERR("Failed to delete provisional space 0x%" PRIx32 " data.",
                       provisional_index.value());
@@ -776,7 +793,8 @@ bool NvramManager::LoadSpaceRecord(uint32_t index,
 
   space_record->transient = &spaces_[space_record->array_index];
 
-  switch (persistence::LoadSpace(index, &space_record->persistent)) {
+  switch (SanitizeStorageStatus(
+      persistence::LoadSpace(index, &space_record->persistent))) {
     case storage::Status::kStorageError:
       NVRAM_LOG_ERR("Failed to load space 0x%" PRIx32 " data.", index);
       *result = NV_RESULT_INTERNAL_ERROR;
@@ -814,7 +832,8 @@ nvram_result_t NvramManager::WriteHeader(Optional<uint32_t> provisional_index) {
 
   header.provisional_index = provisional_index;
 
-  if (persistence::StoreHeader(header) != storage::Status::kSuccess) {
+  if (SanitizeStorageStatus(persistence::StoreHeader(header)) !=
+      storage::Status::kSuccess) {
     NVRAM_LOG_ERR("Failed to store header.");
     return NV_RESULT_INTERNAL_ERROR;
   }
@@ -824,7 +843,8 @@ nvram_result_t NvramManager::WriteHeader(Optional<uint32_t> provisional_index) {
 
 nvram_result_t NvramManager::WriteSpace(uint32_t index,
                                         const NvramSpace& space) {
-  if (persistence::StoreSpace(index, space) != storage::Status::kSuccess) {
+  if (SanitizeStorageStatus(persistence::StoreSpace(index, space)) !=
+      storage::Status::kSuccess) {
     NVRAM_LOG_ERR("Failed to store space 0x%" PRIx32 ".", index);
     return NV_RESULT_INTERNAL_ERROR;
   }
