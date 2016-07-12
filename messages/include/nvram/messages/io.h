@@ -201,7 +201,7 @@ class NVRAM_EXPORT BlobOutputStreamBuffer : public OutputStreamBuffer {
   // Construct a |BlobOutputStreamBuffer| that stores all written data to
   // |blob|, which will get resized as necessary. Note that |blob| must remain
   // valid for the life time of the |BlobOutputStreamBuffer| object.
-  BlobOutputStreamBuffer(Blob* blob);
+  explicit BlobOutputStreamBuffer(Blob* blob);
   ~BlobOutputStreamBuffer() override = default;
 
   // Truncate the blob to match the current output size.
