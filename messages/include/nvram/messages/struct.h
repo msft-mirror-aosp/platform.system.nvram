@@ -249,7 +249,7 @@ struct FieldSpecList<FieldSpec, Tail...> {
   using List = FieldSpecList<FieldSpec, Tail...>;
   using TailList = FieldSpecList<Tail...>;
 
-  constexpr FieldSpecList(FieldSpec field_spec, Tail... tail)
+  constexpr explicit FieldSpecList(FieldSpec field_spec, Tail... tail)
       : kFieldSpec(field_spec), kTail(tail...) {}
 
   template <size_t index>

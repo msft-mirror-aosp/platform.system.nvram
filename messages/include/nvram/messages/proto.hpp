@@ -387,7 +387,7 @@ struct StructDescriptor<StructType, index_sequence<>> {
 template <typename StructType>
 class MessageEncoder : public MessageEncoderBase {
  public:
-  MessageEncoder(const StructType& object)
+  explicit MessageEncoder(const StructType& object)
       : MessageEncoderBase(&object,
                            StructDescriptor<StructType>::kDescriptors,
                            StructDescriptor<StructType>::kNumDescriptors) {}
@@ -404,7 +404,7 @@ class MessageEncoder : public MessageEncoderBase {
 template <typename StructType>
 class MessageDecoder : public MessageDecoderBase {
  public:
-  MessageDecoder(StructType& object)
+  explicit MessageDecoder(StructType& object)
       : MessageDecoderBase(&object,
                            StructDescriptor<StructType>::kDescriptors,
                            StructDescriptor<StructType>::kNumDescriptors) {}
