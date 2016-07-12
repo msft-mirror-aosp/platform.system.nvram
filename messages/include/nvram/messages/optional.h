@@ -24,7 +24,7 @@ namespace nvram {
 template <typename ValueType> class Optional {
  public:
   Optional() = default;
-  Optional(ValueType value) : value_(value), valid_(true) {}
+  explicit Optional(ValueType value) : value_(value), valid_(true) {}
 
   bool valid() const { return valid_; }
   const ValueType& value() const { return value_; }
