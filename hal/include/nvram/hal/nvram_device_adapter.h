@@ -17,7 +17,7 @@
 #ifndef NVRAM_HAL_NVRAM_DEVICE_ADAPTER_H_
 #define NVRAM_HAL_NVRAM_DEVICE_ADAPTER_H_
 
-#include <UniquePtr.h>
+#include <memory>
 
 #include <hardware/nvram.h>
 #include <nvram/messages/nvram_messages.h>
@@ -53,7 +53,7 @@ struct NvramDeviceAdapter {
 
  private:
   nvram_device_t device_;
-  UniquePtr<NvramImplementation> implementation_;
+  std::unique_ptr<NvramImplementation> implementation_;
 };
 
 // Make sure |NvramDeviceAdapter| is a standard layout type. This guarantees
