@@ -138,7 +138,7 @@ nvram::storage::Status StoreFile(const char* name, const nvram::Blob& blob) {
     return nvram::storage::Status::kStorageError;
   }
 
-  data_file_fd.clear();
+  data_file_fd.reset();
 
   // Move the file into place.
   if (TEMP_FAILURE_RETRY(
