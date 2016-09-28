@@ -60,6 +60,7 @@ LOCAL_SHARED_LIBRARIES := \
 	libnvram-messages \
 	libcrypto \
 	libminijail \
+	liblog \
 	libcutils \
 	libbase
 LOCAL_INIT_RC := fake-nvram.rc
