@@ -24,7 +24,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/gtest_stubs.cpp \
 	$(LOCAL_DIR)/manifest.c
 
-MODULE_CPPFLAGS := -Wall -Werror -Wextra -std=c++11
+MODULE_CPPFLAGS := -Wall -Werror -Wextra
 
 MODULE_DEPS += \
 	app/trusty \
