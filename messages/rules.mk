@@ -27,7 +27,7 @@ MODULE_SRCS := \
 MODULE_DEPS := \
 	lib/libc
 
-MODULE_CPPFLAGS := -Wall -Werror -Wextra -std=c++11
+MODULE_CPPFLAGS := -Wall -Werror -Wextra
 
 GLOBAL_INCLUDES += $(LOCAL_DIR)/include/
 

@@ -26,7 +26,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/nvram_manager.cpp \
 	$(LOCAL_DIR)/persistence.cpp
 
-MODULE_CPPFLAGS := -Wall -Werror -Wextra -std=c++11
+MODULE_CPPFLAGS := -Wall -Werror -Wextra
 
 MODULE_DEPS += \
 	external/openssl \
