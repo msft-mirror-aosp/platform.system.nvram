@@ -74,6 +74,7 @@ LOCAL_MODULE := fake-nvram-seccomp.policy
 LOCAL_MODULE_CLASS := ETC
 LOCAL_MODULE_PATH := $(TARGET_OUT)/usr/share/policy/
 LOCAL_SRC_FILES := fake-nvram-seccomp-$(TARGET_ARCH).policy
+LOCAL_MODULE_TARGET_ARCH := arm arm64 x86 x86_64
 include $(BUILD_PREBUILT)
 
 include $(call all-makefiles-under,$(LOCAL_PATH))
