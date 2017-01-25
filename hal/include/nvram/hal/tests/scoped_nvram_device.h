@@ -77,6 +77,6 @@ class ScopedNvramDevice {
   nvram_device_t* device_ = nullptr;
 };
 
-}  // namespace nvram_client
+}  // namespace nvram
 
 #endif  // NVRAM_HAL_TESTS_SCOPED_NVRAM_DEVICE_H_

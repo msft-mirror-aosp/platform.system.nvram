@@ -134,5 +134,5 @@ const FieldDescriptor* MessageDecoderBase::FindDescriptor(
   return nullptr;
 }
 
-}  // namespace nvram
 }  // namespace proto
+}  // namespace nvram
