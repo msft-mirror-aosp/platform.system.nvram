@@ -550,4 +550,4 @@ TEST(NVRAMModuleTest, ReadWriteSpaceDoesNotExist) {
             device.EnableReadLock(index, kNoAuth));
 }
 
-}  // namespace
+}  // namespace nvram
