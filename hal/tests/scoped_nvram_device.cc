@@ -233,4 +233,4 @@ nvram_result_t ScopedNvramDevice::EnableReadLock(
                                    authorization_value.size());
 }
 
-}  // namespace nvram_client
+}  // namespace nvram

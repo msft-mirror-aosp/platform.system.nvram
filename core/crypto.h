@@ -40,6 +40,6 @@ void SHA256(const uint8_t* data,
             size_t digest_size);
 
 }  // namespace crypto
-}  // namespave nvram
+}  // namespace nvram
 
 #endif  // NVRAM_CORE_CRYPTO_H_
