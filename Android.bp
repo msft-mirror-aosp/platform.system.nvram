@@ -1,3 +1,5 @@
 subdirs = [
+    "client",
+    "hal",
     "messages",
 ]
