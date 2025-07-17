@@ -18,6 +18,7 @@
 #define NVRAM_HAL_NVRAM_DEVICE_ADAPTER_H_
 
 #include <memory>
+#include <type_traits>
 
 #include <hardware/nvram.h>
 #include <nvram/messages/nvram_messages.h>
